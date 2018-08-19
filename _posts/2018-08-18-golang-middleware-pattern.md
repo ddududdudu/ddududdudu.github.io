@@ -11,7 +11,7 @@ date: 2018-08-18T21:31:50-04:00
 ---
 
 ### 기본 HTTP server
-```
+```go
 type CustomHandler struct {
   http.Handler
 }
