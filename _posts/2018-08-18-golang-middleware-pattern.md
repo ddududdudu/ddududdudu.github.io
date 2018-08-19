@@ -9,6 +9,7 @@ feature:
 date: 2018-08-18T21:31:50-04:00
 ---
 
+![](https://www.google.co.kr/url?sa=i&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwiRi5vlrvjcAhUL57wKHXYQBpMQjRx6BAgBEAU&url=http%3A%2F%2Framarson.com%2Fblog%2F%3Fp%3D129&psig=AOvVaw0HJNwLpV-xH1XBCAB4q2z0&ust=1534742268486813)
 ### 기본 HTTP server
 ```go
 type CustomHandler struct {
