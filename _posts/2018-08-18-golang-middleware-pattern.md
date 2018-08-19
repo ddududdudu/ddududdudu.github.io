@@ -1,12 +1,11 @@
 ---
 layout: post
 title: "[golang] Middleware pattern"
-modified:
+description: "HTTP server에서 요청을 처리할 때 common하게 처리해야 하는 기능에 대한 middleware 패턴 작성."
 categories: blog
-excerpt:
 tags: [golang]
 image:
-  feature:
+feature:
 date: 2018-08-18T21:31:50-04:00
 ---
 
@@ -29,7 +28,7 @@ func main() {
   http.ListenAndServe(":8080", mux)
 }
 ```
-HTTP 요청을 처리하기 위해 ServeHTTP method를 구현하는 CustomHandler를 정의했다. Default multiplexor를 사용하면 http.handler나 http.HandleFunc와 같은 shortcut을 사용할 수 있어 편하다. 하지만 default multiplexor는 http 패키지에서 global scope으로 노출 되어 있기 때문에 보안적인 이슈가 있으므로 local scope의 multiplexor를 정의해서 사용하는 것이 좋다. 핸들러가 동작할 때 공통적인 기능을 함께 처리해야 하는 경우가 있을텐데 (e.g. 인증, 로깅 등) 이러한 기능을 middleware로 정의하고, 핸들러를 bind하는 시점에 필요한 middleware를 설정하여 사용하면 편리하다.
+HTTP 요청을 처리하기 위해 ServeHTTP method를 구현하는 CustomHandler를 정의했다. Default multiplexor를 사용하면 http.andler나 http.HandleFunc와 같은 shortcut을 사용할 수 있어 편하다. 하지만 default multiplexor는 http 패키지에서 global scope으로 노출 되어 있기 때문에 보안적인 이슈가 있으므로 local scope의 multiplexor를 정의해서 사용하는 것이 좋다. 핸들러가 동작할 때 공통적인 기능을 함께 처리해야 하는 경우가 있을텐데 (e.g. 인증, 로깅 등) 이러한 기능을 middleware로 정의하고, 핸들러를 bind하는 시점에 필요한 middleware를 설정하여 사용하면 편리하다.
 
 ### Middleware 정의
 ```
