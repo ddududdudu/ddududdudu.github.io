@@ -379,6 +379,8 @@ han: false
 #duoshuo_shortname:
 
 # Disqus
+disqus_id: jinookhong
+disqus_url: sikuism@gmail.com
 disqus:
   enable: true
   shortname:
