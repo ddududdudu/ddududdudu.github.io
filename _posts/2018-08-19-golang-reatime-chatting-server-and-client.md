@@ -119,10 +119,39 @@ gorilla/websocket 패키지는 두 가지 메시지 타입을 구분하기 위�
 Text message가 적합한 UTF-8 encoded value임을 보장하는 것은 application의 영역이다.
 
 ##### Control Messages
-WebSocket 프로토콜은 세 가지 타입의 control message를 정의한다 :
+WebSocket 프로토콜은 아래와 같이 세 가지 타입의 control message를 정의하고 있다 :
 > close  
 > ping  
 > pong  
+
+`SetCloseHandler` 메서드를 통해 등록한 handler function를 호출하고, `NextReader`나 `ReadMessage`와 같은 메시지 수신 method에서 `*CloseError`를 리턴함으써 수신한 `close` 메시지를 처리한다. Default close handler의 경우 상대방에게 `close` 메시지를 전송한다.  
+`ping` 메시지의 경우 `SetPingHandler` 메서드를 이용해 등록한 handler function을 이용해 처리하며, default ping handler는 상대방에게 `pong` 메시지를 전달한다.  
+`SetPongHandler` 메서드를 이용해 등록한 handler function을 통해 `pong` 메시지를 처리하게 되는데, default pong handler의 경우 아무런 동작도 수행하지 않느다. 만약 application에서 `ping` 메시지를 전달하는 경우, 돌아오는 `pong` 메시지를 의도대로 처리하기 위한 handler function을 설정해야 한다.  
+Control message handler function들은 NextReader, ReadMessage 그리고 message reader Read 매서드에서 호출된다. 기본 `close`, `ping` handler의 경우 connection에 handler가 connection에 write 할 때 이러한 메서드들을 짧은 시간 동안 블록 시킬 수 있다.  
+Application은 `close` 또는 `ping` 메시지를 처리하기 위해 반드시 connection에서 메시지를 read 해야 한다. 만약 application이 상대방으로부터 전달 된 메시지를 처리하고 싶지 않은 경우, 수신한 메시지를 읽어서 폐기하기 위한 고루틴을 수행해야 한다. 아래 코드는 간단한 예제이다.
+```go
+func readLoop(c *websocket.Conn) {
+    for {
+        if _, _, err := c.NextReader(); err != nil {
+            c.Close()
+            break
+        }
+    }
+}
+```
+
+##### Concurrency
+Connection은 하나의 `concurrent reader`와 `concurrent writer`를 지원한다.  
+Application들은 동시에 하나를 초과하는 go routine이 write method(e.g. `NextWrite`, `SetWriteDeadline`, `WriteMessage`, `WriteJSON`, `EnableWriteCompression`, `SetCompressionLevel`) 호출을 하지 않고, 마찬가지로 같은 순간에 하나를 초과하는 go routine이 read method(e.g. `NextReader`, `SetReadDeadline`, `ReadMessage`, `ReadJSON`, `SetPongHandler`, `SetPingHandler`) 호출을 하지 않음을 보장해야 한다.  
+`Close`와 `WriteControl` 메서드들은 다른 모든 메서드들과 함께 동시에 호출 가능하다.
+
+##### Origin Considerations
+웹 브라우저는 자바 스크립트 application이 어떤 host든 WebSocket connection을 열 수 있도록 허용한다. 웹 브라우저로 부터 전달 된 `Origin request header`를 사용하는 `origin policy`를 강제하는 것은 서버에 의존한다.  
+`Upgrader`는 origin을 검사하기 위해 `CheckOrigin` 필드에 명시 된 function을 호출한다. 만약 `CheckOrigin` function이 fail을 리턴하는 경우 `Upgrade` 메서드는 403 HTTP status code와 함께 WebSocket handshake를 실패하게 된다.  
+만약 `CheckOrigin` filed의 값이 nil 인 경우, `Upgrader`는 안전하게 default 값을 사용하게 되며 default 동작은 아래와 같다.  
+> 만약 `Origin request header`의 값이 존재하고, `Origin Host`가 `Host request header`와 동일하지 않을 경우 WebSocket handshake는 실패함.
+
+Deprecated package-level `Upgrade` function은 origin 확인을 수행하지 않았으며, application은 `Upgrade` function을 호출하기 전에 origin header를 확인할 책임이 있다.
 
 #### Web Socket Server
 
