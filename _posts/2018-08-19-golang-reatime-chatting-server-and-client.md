@@ -21,7 +21,7 @@ date: 2018-08-19T14:37:50-04:00
 실시간 채팅 서버를 위해서는 사용자의 요청 없이도 갱신된 내용을 확인 가능해야 하므로 이러한 구조적 제약을 해결할 필요가 있다.
 
 #### Web Socket이란?
-IETF에 의해 정의 된 Web Socket에 대한 명세는 아래와 같다. [RFC6455](https://tools.ietf.org/html/rfc6455)
+**IETF**(Internet Engineering Task Force)에 의해 정의 된 Web Socket에 대한 명세는 아래와 같다. [RFC6455](https://tools.ietf.org/html/rfc6455)
 > The WebSocket Protocol enables two-way communication between a client running untrusted code in a controlled environment to a remote host that has opted-in to communications from that code.  
 ...  
 The goal of this technology is to provide a mechanism for browser-based applications that need two-way communication with servers that does not rely on opening multiple HTTP connections (e.g., using `XMLHttpRequest` or `iframe`s and `long polling`).
@@ -31,7 +31,14 @@ The goal of this technology is to provide a mechanism for browser-based applicat
 * Server와 client간의 양방향 통신을 가능하게 하고,
 * 복수의 HTTP connection에 의존하지 않는다.  
 
-즉, 항상 열려있는 연결을 통해 필요한 정보를 server와 client가 주고 받을 수 있게 해주는 `protocol` 이라는 것이다.
+즉, 항상 열려있는 연결을 통해 필요한 정보를 server와 client가 주고 받을 수 있게 해주는 `protocol` 이라는 것이다. WebSocket의 handshake 과정은 아래와 같다.  
+
+<p align="center">
+  <img width="" height="" src="https://media.springernature.com/lw785/springer-static/image/art%3A10.1007%2Fs11042-018-5821-z/MediaObjects/11042_2018_5821_Fig2_HTML.gif">
+</p>
+
+WebSocket은 HTTP와 마찬가지로 80번 포트를 통해 통신하며(Sercure 버전인 WSS는 443번 포트), `Upgrade` header를 이용하여 프로토콜 전환을 요청한다. 그 뒤 `Protocol-Overhead`방식(TCP 커넥션을 여러 개 생성하지 않고, 80번 포트의 커넥션 하나 만을 사용 하면서 별도의 헤더 등을 이용해 logical 하게 여러 개의 커넥션을 맺는 효과를 내는 방식)으로 데이터를 주고 받는다. 이후 주기적으로 heartbeat 패킷을 발생 시키면서 커넥션이 정상적으로 유지 되고 있는지 확인 하게 된다.
+
 
 #### golang의 WebSocket package
 실제 구현을 위해 Web Socket protocol의 golang 구현체를 찾아본다. golang의 장점인 안정적이고 강력한 standard library를 활용하기 위해 godoc에서 WebSocket으로 검색하면 아래 패키지를 찾을 수 있다.  
@@ -41,7 +48,81 @@ The goal of this technology is to provide a mechanism for browser-based applicat
 
 > This package currently lacks some features found in an alternative and more actively maintained WebSocket package: [**https://godoc.org/github.com/gorilla/websocket**](https://godoc.org/github.com/gorilla/websocket)
 
-즉, 더 잘 관리되고 더 많은 기능을 가진 WebSocket 패키지가 저기 있다는 말이다.
+즉, 더 잘 관리되고 더 많은 기능을 가진 WebSocket 패키지가 저기 있다는 말이다. 
+>1. Standard websocket library로 상용 서비스 구현이 불가능한 수준인가?
+>2. 왜 standard library에 미지원 기능을 추가 하지 않고 있는가?
+>3. 여러 WebSocket library가 있을 텐데 왜 저것을 추천하는가?  
+
+하는 의문도 생기고 추후 직접 WebSocker 구현체를 만들어보면 좋겠지만, 지금의 목표는 golang + WebSocket를 이용한 채팅 서비스 구현이므로 ~~추천 받은~~ gorilla/websocket 패키지의 실제 사용 방법을 먼저 확인해본다.
+
+#### [gorilla/websocket package](https://godoc.org/github.com/gorilla/websocket)
+##### Overview
+gorilla/websocket 패키지는 [RFC6455](https://tools.ietf.org/html/rfc6455)에 정의된 WebSocket 프로토콜을 구현하고 있다. `Conn` type을 통해 WebSocket 커넥션을 관리한다. Server application은 `Conn`을 얻기 위해 HTTP request handler에서 Upgrader.Upgrade 메서드를 호출한다.
+
+```go
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    ... Use conn to send and receive messages.
+}
+```
+
+Byte slice 형태의 메시지를 송/수신 하기 위해 `conn`의 `WriteMessage` 또는  `ReceiveMessage` 메서드를 사용한다. 아래 code snippet은 이 메서드를 이용해 간단한 echo message 동작을 보여준다.
+
+```go
+for {
+    messageType, p, err := conn.ReadMessage()
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := conn.WriteMessage(messageType, p); err != nil {
+        log.Println(err)
+        return
+    }
+}
+```
+
+위 code snippet에서 `p`는 `[]byte`이고 `messageType`은 `websocket.BinaryMessage` 또는 `websocket.TextMessage` 값을 가진 `int`이다.  
+Application은 `io.WriteCloser` 또는 `io.Reader` 인터페이스의 구현체를 통해서도 메시지를 송/수신 할 수 있다. 메시지를 송신하기 위해, `NextWriter` 메서드를 호출해 `io.WriteCloser` 값을 얻은 후 메시지를 write하고 완료 시 close한다. 마찬가지로 메시지 수신을 위해, `NextReader` 메서드를 호출해 `io.Reader` 값을 얻은 후 메시지를 read 한다. (`io.EOF`가 리턴 될 때 까지) 아래 code snippet은 `NextReader`와 `NextWriteCloser` 메서드를 이용한 echo message 동작을 보여준다.
+
+```go
+for {
+    messageType, r, err := conn.NextReader()
+    if err != nil {
+        return
+    }
+    w, err := conn.NextWriter(messageType)
+    if err != nil {
+        return err
+    }
+    if _, err := io.Copy(w, r); err != nil {
+        return err
+    }
+    if err := w.Close(); err != nil {
+        return err
+    }
+}
+```
+
+##### Date Message
+WebSocket 프로토콜은 message type을 `Text message`와 `Binary data message` 두 가지로 구분한다. Text nessage의 경우 UTF-8 encoded text로 해석하며, Binary data message의 해석은 application의 구현에 의존한다.  
+gorilla/websocket 패키지는 두 가지 메시지 타입을 구분하기 위해 `TextMessage`와 `BinaryMessage`로 정의 된 integer constants를 사용한다. 위에서 설명한 `ReadMessage`와 `NextReader` 메서드는 현재 메시지의 type을 리턴한다. 이 메시지 타입은 `WriteMessage`와 `NextWriter` 메서드들이 현재 메시지 타입을 구분할 수 있도록 인자로 넘겨진다.  
+Text message가 적합한 UTF-8 encoded value임을 보장하는 것은 application의 영역이다.
+
+##### Control Messages
+WebSocket 프로토콜은 세 가지 타입의 control message를 정의한다 :
+> close  
+> ping  
+> pong  
 
 #### Web Socket Server
 
