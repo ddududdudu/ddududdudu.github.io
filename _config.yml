@@ -4,7 +4,7 @@
 # ---------------------------------------------------------------
 
 # Site
-title: Keep Calm and PIKA PIKA
+title: Keep Calm and DDU-DU DDU-DU
 subtitle:
 description:
 author: Jinook Hong
@@ -79,7 +79,7 @@ plugins:
 favicon: /assets/favicon.ico
 
 # Set default keywords (Use a comma to separate)
-keywords: "PIKA"
+keywords: "DDU-DU DDU-DU"
 
 # Set rss to false to disable feed link.
 # Leave rss as empty to use site's feed link.
