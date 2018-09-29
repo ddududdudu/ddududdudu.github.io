@@ -23,7 +23,7 @@ ch = make(chan int)
 //channel에 1을 send.
 ch <- 1 
 
-//channel로 부터 값을 receive. (blocking)
+//channel로 부터 값을 receive.
 var receiver int
 receiver <- ch 
 ```
@@ -31,7 +31,7 @@ receiver <- ch
 그리고 사용이 끝난 `channel`에 대해 `close`를 수행 할 수 있다.  
 이 경우 해당 `channel`에 receive 하고 있는 모든 `go routine`에게 두 번째 파라미터(`bool`)를 통해 channel이 closed 되었음을 알릴 수 있다.
 ```go
-//send 시 blocking을 피하기 위해 buffered channel 생성
+//deadlock을 피하기 위해 buffered channel 생성
 ch := make(chan int, 1)
 ch <- 1
 close(ch)
@@ -76,3 +76,5 @@ close(ch)
 |closed|send   | panic     |
 |closed|receive| zero-value|
 |closed|close  | panic     |
+
+`channel` 사용 시 `:=` 연산자를 통해 정의와 초기화를 함께 수행하는 경우가 대부분이므로 closed `channel`에 대한 접근에 유의하면 좋을 것 같다.
