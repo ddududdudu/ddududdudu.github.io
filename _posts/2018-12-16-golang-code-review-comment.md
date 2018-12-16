@@ -26,4 +26,22 @@ func Encode(w io.Writer, req *Request) { ...
 ```
 > 주석이 필요 없을 정도로 코딩을 하라고는 하지만 당장 어제 짠 코드를 보고도 '이걸 내가 했던가?..' 하는 나로서는 코멘트의 중요함은 아무리 강조해도 모자름이 없다. 내가 만든 패키지를 타인에게 공개하고 이를 `godoc`을 통해 문서화 해본 경험은 없지만, 잘 정리된 단순한 코멘트 만으로 패키지를 문서화할 수 있다는 점은 큰 장점인 것 같다.
 
-### 
+### Contexts
+`context.Context` type은 security cendentials, tracing information, deadlines, 그리고 cancelation signal 등을 API와 프로세스 경계를 가로질러 전달할 수 있다. Go 프로그램은 들어오는 RPC 및 나가는 HTTP 요청에 이르기까지 전체 function call chain에서 `Context`를 명시적으로 전달한다.  
+
+`context.Context`를 사용하는 대부분의 함수는 이를 첫 번째 파라미터로 받아들인다.
+```go
+func F(ctx context.Context, /* other arguments */) {}
+```  
+
+특정한 요청을 한 적 없는 함수의 경우 `context.Background()`를 사용할 수는 있지만, 당신이 필요하지 않다고 판단한 경우에도 `Context`를 전달하는 측면의 오류가 있을 수 있다. 보통의 경우 `Context`를 전달하지만, 대체할 수 있는 방법에 문제가 있다고 판단하는 경우에만 `context.Background()`를 직접 사용하라.  
+
+`struct` type에 `Context` 멤버를 추가하지 말라. 대신 함께 전달해야 할 필요가 있는 각 타입의 메서드에 `ctx`를 parameter로 추가하라. 단 하나의 예외는 표준 라이브러리 또는 third-party 라이브러리의 인터페이스에 대한 signature를 일치시켜야 할 때 뿐이다.  
+
+function signature에`Custom context` type을 만들거나 `Context`이외의 인터페이스를 사용하지 말라.
+
+만약 프로그램 전체에 유통 되어야 하는 데이터가 존재하는 경우 이를 파라미터로 전달하거나, 리시버의 멤버로 정의하거나 전역 변수를 사용하라. 정말로 그래야 한다고 생각하는 경우에만 `Context`의 value로 추가하라.
+
+`Context`는 불변이다. 따라서 같은 deadline, cancellation signal, credentials, trace 정보 등을 공유하기 위해 같은 `ctx` 인스턴스를 2회 이상의 요청에 대해 전달하는 것에 문제가 없다.
+
+
