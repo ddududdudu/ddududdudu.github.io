@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[golang] Enumeration
+title: "[golang] Enumeration"
 description: Golang에서 Enumeration과 유사한 형태를 흉내내어 보기.
 categories: blog
 tags: [golang]
