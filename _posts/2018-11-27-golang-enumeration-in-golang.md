@@ -1,3 +1,14 @@
+---
+layout: post
+title: "[golang] Enumeration
+description: Golang에서 Enumeration과 유사한 형태를 흉내내어 보기.
+categories: blog
+tags: [golang]
+image:
+feature:
+date: 2018-11-27T21:31:50-04:00
+---
+
 `Enumeation`은 결국 특정 type에 대한 값을 지정한 이름으로 사용하겠다는 약속이다.  
 이러한 약속을 통해 코드를 좀 더 명확하고 구조화할 수 있다.  
 `Golang` 에서는 `enum` type이 존재하지 않지만, 아래와 같이 라벨링을 해서 유사한 형태를 가져볼 수 있다.
