@@ -43,5 +43,7 @@ function signature에`Custom context` type을 만들거나 `Context`이외의 �
 만약 프로그램 전체에 유통 되어야 하는 데이터가 존재하는 경우 이를 파라미터로 전달하거나, 리시버의 멤버로 정의하거나 전역 변수를 사용하라. 정말로 그래야 한다고 생각하는 경우에만 `Context`의 value로 추가하라.
 
 `Context`는 불변이다. 따라서 같은 deadline, cancellation signal, credentials, trace 정보 등을 공유하기 위해 같은 `ctx` 인스턴스를 2회 이상의 요청에 대해 전달하는 것에 문제가 없다.
+> Go 1.7에 추가된 `context`에 대한 내용이다. 말 그대로, 하나의 동작 체인(e.g. HTTP 서버의 경우 request를 처리하고 response를 전달 하기 까지)에서 유툥되는 정보의 맥락을 가리킨다. 하나의 `context`를 메서드의 인자로 넘겨줌으로써 전체 맥락을 공유할 수 있다. 따라서 특정 함수에서 `context.Background()`를 사용하여 새로운 `context`를 생성하는 것은 전체 프로그램의 동작에 있어서 `context`의 유통을 깨뜨리는 결과를 만들 수 있음을 주의해야 한다.
+
 
 
