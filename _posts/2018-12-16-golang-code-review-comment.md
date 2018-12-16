@@ -61,5 +61,6 @@ t := []string{}
 ```
 두 slice의 경우 `len`과 `cap`이 모두 `zero`이므로 기능적으로는 동일하다. 하지만 `nil` slice가 선호되는 스타일이다.  
 JSON 인코딩의 경우 처럼 `nil` slice 보다 `ㅜnon-nil` slice가 선호되는 경우가 있을 수 있다. (`nil` slice는 `null`로 인코딩 되지만 `non-nil` slice는 array `[]`로 인코딩 됨)  
-`interface`를 디자인 하는 경우 `nil` slice와 `non-nil` slice, `zero-length` slice간의 차이를 만들지 않도록 주의해야 한다. 이는 사소한 프로그래밍 에러를 만들 수 있다.ramming errors.  
+`interface`를 디자인 하는 경우 `nil` slice와 `non-nil` slice, `zero-length` slice간의 차이를 만들지 않도록 주의해야 한다. 이는 사소한 프로그래밍 에러를 만들 수 있다.  
 `nil`에 대한 자세한 논의는 [`Francesc Campoy's talk Understanding Nil`](https://www.youtube.com/watch?v=ynoY2xz-F8s)을 참고하자.
+> `non-nil` slice 보다 `nil` slice를 선호하는 이유가 뭘까. length와 capacity가 0으로 동일하고, 따라서 `for`와 같은 loop에서도 동일하게 처리 되며, 요소를 추가하기 위해 `append`를 사용할 때도 동일하게 동작한다. 해당 슬라이스가 `nil`이냐 아니냐가 존재할 뿐이다. slice는 실제로 데이터를 담고있는 array를 가리키는 메타 정보를 가지고 있는 일종의 포인터이므로, 결국 '가리키고 있는 메모리가 있냐 없냐'라는 표현의 문제로 보인다. 즉, '초기화 되지 않아 가리키는 메모리 공간이 없는' `nil` slice이냐, '초기화 되어 가리키는 메모리 공간이 있지만 비어있는' `non-nil` slice이냐.
