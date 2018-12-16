@@ -48,4 +48,18 @@ function signature에`Custom context` type을 만들거나 `Context`이외의 �
 ### Copying
 예상하지 못한 aliasing을 피하기 위해, 다른 패키지로부터의 `struct`를 복사하는 경우 주의할 필요가 있다. 예를 들어, `bytes.Buffer` type은 작은 string에 대한 최적화로서 []byte를 포함하며, 이 byte slice가 참조하는 작은 byte array를 가진다. 만약 `bytes.Buffer`를 copy하는 경우 slice의 복사본에 의해 byte array에 대한 aliasing이 존재하게 되어 이로인한 의도치 않은 결과를 초래할 수 있다.  
 보통의 경우, 포인터 리시버를 사용하는 메서드가 포함 된 `type T`의 경우 복사하지 말라.
-> 이 경우는 당장 눈에 띄지 않더라도 문제가 발생할 소지가 크고, 이슈가 발생 했을 때 파악하기 쉽지 않기 때문에 주의해야한다.
+> 이 경우는 당장 눈에 띄지 않더라도 문제가 발생할 소지가 크고, 이슈가 발생 했을 때 파악하기 쉽지 않기 때문에 처음 부터 유념하고 개발을 하는 것이 좋다.
+
+### Declaring Empty Slices
+Empty slice를 정의할 때 아래와 같이 `nil` slice를 정의하는 것을 추천한다.
+```go
+var t []string
+```
+아래 처럼 `non-nil` slice를 정의 할수도 있다.
+```go
+t := []string{}
+```
+두 slice의 경우 `len`과 `cap`이 모두 `zero`이므로 기능적으로는 동일하다. 하지만 `nil` slice가 선호되는 스타일이다.  
+JSON 인코딩의 경우 처럼 `nil` slice 보다 `ㅜnon-nil` slice가 선호되는 경우가 있을 수 있다. (`nil` slice는 `null`로 인코딩 되지만 `non-nil` slice는 array `[]`로 인코딩 됨)  
+`interface`를 디자인 하는 경우 `nil` slice와 `non-nil` slice, `zero-length` slice간의 차이를 만들지 않도록 주의해야 한다. 이는 사소한 프로그래밍 에러를 만들 수 있다.ramming errors.  
+`nil`에 대한 자세한 논의는 [`Francesc Campoy's talk Understanding Nil`](https://www.youtube.com/watch?v=ynoY2xz-F8s)을 참고하자.
