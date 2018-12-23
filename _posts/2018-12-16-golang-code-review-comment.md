@@ -95,4 +95,4 @@ func Key() string {
 
 ### Don't Panic
 [errors](https://golang.org/doc/effective_go.html#errors)를 참고하자. 일반적인 에러 핸들링을 위해 `panic`을 사용하지 말라. `error`와 `multiple return value`를 사용하자.
-> 
+> 명시적으로 built-in function `panic()`을 이용하거나, 혹은 런타임 에러 등에 의해 `panic`을 발생 시킬 수 있다. 하지만 명심해야 할 것은, `panic`이 발생했다는 것은 곧 실행 중인 프로그램의 정지를 의미(정확히는 해당 go-routine)한다는 것이다. 또 다른 built-in function인 `recover()`를 이용해 이러한 `panic`을 핸들링 해볼 수 있지만, `정말로, 제대로` 처리할 수 있을지 확신을 갖는 것은 굉장히 어려운 일이며, 제대로 처리 되지 못한 `panic`의 후속으로 이루어질 수 있는 오동작이 어떤 결과를 초래할지는 알 수 없다. 
