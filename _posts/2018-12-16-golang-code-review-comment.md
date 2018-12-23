@@ -64,3 +64,27 @@ JSON 인코딩의 경우 처럼 `nil` slice 보다 `ㅜnon-nil` slice가 선호�
 `interface`를 디자인 하는 경우 `nil` slice와 `non-nil` slice, `zero-length` slice간의 차이를 만들지 않도록 주의해야 한다. 이는 사소한 프로그래밍 에러를 만들 수 있다.  
 `nil`에 대한 자세한 논의는 [`Francesc Campoy's talk Understanding Nil`](https://www.youtube.com/watch?v=ynoY2xz-F8s)을 참고하자.
 > `non-nil` slice 보다 `nil` slice를 선호하는 이유가 뭘까. length와 capacity가 0으로 동일하고, 따라서 `for`와 같은 loop에서도 동일하게 처리 되며, 요소를 추가하기 위해 `append`를 사용할 때도 동일하게 동작한다. 해당 슬라이스가 `nil`이냐 아니냐가 존재할 뿐이다. slice는 실제로 데이터를 담고있는 array를 가리키는 메타 정보를 가지고 있는 일종의 포인터이므로, 결국 '가리키고 있는 메모리가 있냐 없냐'라는 표현의 문제로 보인다. 즉, '초기화 되지 않아 가리키는 메모리 공간이 없는' `nil` slice이냐, '초기화 되어 가리키는 메모리 공간이 있지만 비어있는' `non-nil` slice이냐.
+
+### Crypto Rand
+한 번 사용 후 버리는 경우라고 할지라도 키를 생성할 때 `math/rand` 패키지를 사용하지 말라. 시드 되지 않았고(unseeded) 완전하게 예측 가능하다. `time.Nanoseconds()`로 시드 하는 경우는 약간의 복잡도가 존재한다. 대신에 `crypto/rand`의 `Reader`를 사용하고, 만약 텍스트 형태의 아웃풋을 원하는 경우는 hexadecimal 또는 base64로 출력하라.
+```go
+import (
+    "crypto/rand"
+    // "encoding/base64"
+    // "encoding/hex"
+    "fmt"
+)
+
+func Key() string {
+    buf := make([]byte, 16)
+    _, err := rand.Read(buf)
+    if err != nil {
+        panic(err)  // out of randomness, should never happen
+    }
+    return fmt.Sprintf("%x", buf)
+    // or hex.EncodeToString(buf)
+    // or base64.StdEncoding.EncodeToString(buf)
+}
+```
+
+> 그렇게 하자. ㅇㅇ
