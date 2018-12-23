@@ -87,6 +87,12 @@ func Key() string {
 }
 ```
 
-> Unseeded `math/rand`의 경우 `default source`를 사용하기 때문에, 프로그램이 실행 되는 동안의 값들이 이미 결정(deterministic) 되어 있다. `Seed()`를 이용해 새로운 source를 생성하는 경우에는 concurrent-safe 하지 않다는 점을 유의해야 한다. Security-sensitve한 부분인 경우 `crypto/rand'를 사용하자.
+> Unseeded `math/rand`의 경우 `default source`를 사용하기 때문에, 프로그램이 실행 되는 동안의 값들이 이미 결정(deterministic) 되어 있다. `Seed()`를 이용해 새로운 source를 생성하는 경우에는 concurrent-safe 하지 않다는 점을 유의해야 한다. Security-sensitve한 부분인 경우 `crypto/rand` 패키지를 사용하자.
 
+### Doc Comments
+모든 최상위, exported symbol은 중요한 unexported type이나 function 정의와 같이 `doc comment`를 가져야 한다. Commentary convention에 대한 자세한 내용은 [commentary](https://golang.org/doc/effective_go.html#commentary)를 참고하자.
+> `Comment Sentences`와 이어지는 내용이다.
 
+### Don't Panic
+[errors](https://golang.org/doc/effective_go.html#errors)를 참고하자. 일반적인 에러 핸들링을 위해 `panic`을 사용하지 말라. `error`와 `multiple return value`를 사용하자.
+> 
