@@ -101,3 +101,10 @@ func Key() string {
 `Error` 문장은 보통 다른 문장들과 함께 출력 되기 때문에 일반적인 명사나 약어로 시작하지 않는 이상 반드시 대문자화 하지 않아야 하고, 마침표로 종료 되지 않아야 한다. `fmt.Errorf("Something bad")`가 아닌 `fmt.Errorf("something bad"`로 사용해야 하는 이유인데, `log.Printf("Reading %s: %v", filename, err)`와 같은 포맷에서 이상한 대문자 문장이 중간에 끼지 않게 하기 위함이다. 이러한 룰은 로깅에는 적용하지 않는데, 암묵적으로 줄 단위로 처리되며 다른 메시지와 조합되지 않기 때문이다.
 > 사용 중인 IDE인 goland에서 warning이 뜨는 것이 싫어서 저 룰에 따르고는 있었지만, 처음에는 뭔가 불편했었다. 하지만 역시 저러한 이유가 존재했던 것 처럼, 에러 메시지는 여러 layer를 거쳐 전달 되거나 혹은 추가로 wrapping 하거나 하는 등의 특성을 가질 수 밖에 없으므로 결국에는 인정하고 있다.
 
+### Examples
+새로운 패키지를 추가할 때, 실행 가능한 Example 또는 전체 call sequence를 보여주는 간단한 테스트 데모와 같은 의도한 사용 예제를 포함하라.
+[Testable Example() function](https://blog.golang.org/examples)을 참고하자.
+> `Example`은 흔히 사용하는 `Test`와 마찬가지로 `go test` built-in tool에 의해 동작한다. `Test`와의 차이점은 Example이란 prefix로 시작하며, 별도의 인자를 받지 않고, Example naming rule에 따라 `godoc`에 의해 적절한 패키지, 함수의 예제로 문서화 될 수 있다는 것이다. 위에 소개했던 Documentation 관련 항목들과 같이, 이용하면 유용해지는 항목이다.
+
+### 
+
