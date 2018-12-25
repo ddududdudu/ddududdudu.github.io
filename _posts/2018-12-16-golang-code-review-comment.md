@@ -106,5 +106,17 @@ func Key() string {
 [Testable Example() function](https://blog.golang.org/examples)을 참고하자.
 > `Example`은 흔히 사용하는 `Test`와 마찬가지로 `go test` built-in tool에 의해 동작한다. `Test`와의 차이점은 Example이란 prefix로 시작하며, 별도의 인자를 받지 않고, Example naming rule에 따라 `godoc`에 의해 적절한 패키지, 함수의 예제로 문서화 될 수 있다는 것이다. 위에 소개했던 Documentation 관련 항목들과 같이, 이용하면 유용해지는 항목이다.
 
+### Goroutine Lifetimes
+`goroutine`을 생성할 때, 이것이 언제 종료 되는지, 종료 되긴 하는건지를 명확히 하라.  
+  
+`goroutine`은 `channel`에 의한 송수신에 의해 블록 되거나 누수가 발생할 수 있다. `Garbage collector`는 `goroutine`이 block 된 `channel`에 의해 관리할 수 없게 되더라도(unreachable) 이를 종료 시키지 않을 것이다.   
+  
+`goroutine`이 누수되지 않더라도, 더 이상 사용하지 않는 `goroutine`을 동작 상태로 두는 것은 또 다른 미묘하고 알아채기 힘든 문제들을 유발할 수 있다. Closed `channel`에 송신하는 것은 `panic`을 일으킨다. 결과를 필요로 하지 않게된 이후 사용 중인 입력 값의 수정은 데이터 경합을 일으킬 수 있다. 또한 임의의 긴 시간 동안 `goroutine`을 동작중인 상태로 내버려 두는 것은 예상치 못한 메모리 사용을 일으킬 수 있다.   
+  
+`goroutine`의 lifetime이 명확해질 수 있도록 동시성이 필요한 코드는 충분히 간단하게 유지하도록 노력하라. 만약 그것이 명확하지 않다면, 언제/왜 `goroutine`이 종료 되는지 문서화하라.
+> `golang`을 사용하는 개발자라면 누구나 인정 하듯, `goroutine`은 간단하게 동시성을 제공해주는 강력한 도구이다. 많은 부분들이 `go runtime`에 의해 관리되고 추상화 되어 있어 많은 신경을 쏟지 않아도 될지라도, 생성한 `goroutine`이 언제 어떻게 종료 되는지, 동시에 접근되는 자원에 대한 충분한 고려가 되고 있는지는 결국 개발자의 판단이 필요한 부분이다.
+
 ### 
+
+
 
