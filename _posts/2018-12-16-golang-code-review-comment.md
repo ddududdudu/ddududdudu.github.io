@@ -142,7 +142,11 @@ import (
 `goimport`가 당신을 위해 이를 해줄 것이다.
 > `golang`은 '뭘 이런 것 까지?' 라는 생각을 하게 되는 순간이 자주 있다. 이것은 외부 패키지를 사용하기 위한 `import` 구문에 대한 내용인데, `golang`의 짖궂은 점 중 하나가 이런 것이다. 하지만 중요한 것은 `golang`은 이러한 것을 단순히 개발자의 짐으로 남겨두지 않고, 항상 이것을 자동화 할 수 있는 수단을 함께 제공한다. `gofmt` 항목에서 소개했던 `goimport` 툴을 쓰기만 하면 된다. built-in 툴이므로 이미 존재하며, 이 것 외에 생산적이지 않은 여러 요소들을 통일하여 준다. 쓰지 않을 이유가 없다.
 
-### 
+### Import Blank
+`Side effect`만을 위해 import 되는 패키지는(`_` "pkg" 문법을 사용하는 import) 프로그램의 main package 혹은 실제로 그들을 필요로 하는 테스트 내에서만 import 되어야 한다.
+> 우선 `side effect`가 뭔지 알아야 한다. DB를 사용 하는 경우 가장 흔히 이 패턴을 사용하게 되는데, `import _ "github.com/go-sql-driver/mysql"` 와 같은 경우다. 'mysql' 패키지는 'database/sql' 패키지가 내부적으로 사용하는 'mysql'의 'driver' 패키지이다. 프로그램에서 직접적으로 'mysql' 패키지를 사용하지 않기 때문에 `_`를 이용해 무시하고(그렇지 않을 경우 에러 발생), 단순히 'driver' 패키지를 import 함으로써 해당 패키지의 내부에서는 `init()` 함수, package scope의 변수 초기화 또는 이를 이용한 트릭 유사한 방법의 동작(e.g. `var _ = os.Remove("path/to/remove)`)을 수행할 수 있다. 이를 `import side effect`라고 표현한다. 이러한 맥락에서 보면 위 코멘트를 이해할 수 있는데, 이러한 `side effect` 동작은 분명히 해당 프로그램의 초기화 시점에 이루어져야 함이 분명하기 때문이다. `main` 패키지의 경우 해당 프로그램의 실질적인 entry point 이므로 적절한 위치이고, `test` 또한 해당 테스트가 동작하는 시점에서의 entry point이기 때문다.
+
+
 
 
 
