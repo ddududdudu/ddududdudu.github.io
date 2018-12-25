@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[golang] Code Review Comment"
+title: "[golang] Go Code Review Comment"
 description: Golang project에 대한 code review 진행 시 중점적으로 보아야 할 common mistake.
 categories: blog
 tags: [golang, go, codereviewcomment, code, review, comment]
@@ -200,10 +200,51 @@ if err != nil {
 이니셜이나 약어(e.g. "URL" 또는 "NATO")로 이루어진 단어의 경우 일관성이 있다. 예를 들어, "URL"은 절대로 "Url"과 같은 모습이 아닌 "URL" 또는 "url"로 존재("urlPony" 또는 "URLPony"와 같은)해야 한다. 또 다른 예로, ServerHTTP이지 ServerHttp가 아니다. 여러 단어로 이루어진 식별자의 경우 "xmlHTTPRequest" 또는 "XMLHTTPRequest" 와 같이 사용하면 된다.  
 이 룰은 또한 "Identity Document"의 약자인 "ID"에도 적용 되는데("ego", "superego" 와 함끼 사용되는 "id"가 아닌), 따라서 "appId" 가 아닌 "appID"로 사용 되어야 한다.  
 `protocol buffer` 컴파일러에 의해 생성 된 코드는 이 룰에서 제외한다. 인간이 작성한 코드는 기계에 의해 생성 된 코드보다 더 높은 표준을 유지해야 한다.
-> 이름을 짓는 것은 어려운 일 중에 하나이다. 사실 이래도 좋고 저래도 좋은 문제 중 하나일 뿐이지만, 사람마다 선호도가 다르고 팀 마다 표준이 다를 수 있기 때문이다. 앞으로는 이 룰에 따를 예정이다.
+> `일관성 있게` 이름을 짓는 것은 어려운 일 중에 하나이다. 사실 이래도 좋고 저래도 좋은 문제 중 하나일 뿐이지만, 사람마다 선호도가 다르고 팀 마다 표준이 다를 수 있기 때문이다. 앞으로는 이 룰에 따를 예정이다.
 
+### Interfaces
+Go interface는 일반적으로 그 값을 구현하는 패키지에 속하는 것이 아니라 인터페이스 타입의 값을 사용하는 패키지에 속한다. Package를 구현하는 것은 구체적인 타입을 반환하며(보통 포인터 혹은 구조체), 이 방법으로 광범위한 리팩토링을 필요로 하지 않고도 새 메서드를 추가할 수 있다.  
+'mocking'을 위한 API의 구현체에 인터페이스를 정의하지 말라. 대신, 실제 구현체의 공개 API를 사용하여 이를 테스트할 수 있도록 디자인하라.  
+실제로 사용 되기 전에 인터페이스를 미리 정의하지 말라: 실질적인 사용예 없이는 인터페이스가 정말로 유용한지, 정말로 포함 되어야 할 메서드가 무엇인지 알기 어렵다.
 
+```go
+package consumer  // consumer.go
 
+type Thinger interface { Thing() bool }
+
+func Foo(t Thinger) string { … }
+```
+
+```go
+package consumer // consumer_test.go
+
+type fakeThinger struct{ … }
+func (t fakeThinger) Thing() bool { … }
+…
+if Foo(fakeThinger{…}) == "x" { … }
+```
+
+```go
+// DO NOT DO IT!!!
+package producer
+
+type Thinger interface { Thing() bool }
+
+type defaultThinger struct{ … }
+func (t defaultThinger) Thing() bool { … }
+
+func NewThinger() Thinger { return defaultThinger{ … } }
+```
+구체적인 타입을 리턴하는 대신 그것을 소비하는 측에서 구현을 흉내내도록 하라.
+Instead return a concrete type and let the consumer mock the producer implementation.
+```go
+package producer
+
+type Thinger struct{ … }
+func (t Thinger) Thing() bool { … }
+
+func NewThinger() Thinger { return Thinger{ … } }
+```
 
 
 
