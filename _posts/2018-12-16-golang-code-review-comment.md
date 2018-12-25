@@ -120,6 +120,33 @@ func Key() string {
 [Effective Go - Errors](https://golang.org/doc/effective_go.html#errors)를 보라. 만약 function이 `error`를 리턴 한다면, `_`로 무시하지말고, 그 동작이 성공했는지를 확실히 하기 위해 `error`를 확인하라. `error`를 다루고, 리턴하고, 정말로 예외적인 경우에는 `panic`을 발생하라.
 > `golang`을 사용하면 수 많은 `error` 처리 구문으로 가득한 코드를 발견하게 된다. 실제 로직 보다도 에러 처리가 많은 경우도 있었다. 이게 최선인지, 나만 이런건지 많이 찾아보았지만 이게 최선이고 나만 이런 것도 아니었다. `error`를 무시한 대가는 소중한 새벽잠과 주말을 잃게 되는 결과로 나타날 수 있다. 명시적으로 `error`를 전달하고, 처리하자.
 
+### Imports
+이름 충돌을 피하기 위해 패키지를 re-naming 하는 경우를 제외하고 패키지의 이름을 바꾸는 것을 지양하라. 좋은 패키지 이름은 re-naming을 필요로 하지 않는다. 패키지 이름 충돌이 발생하는 경우, 가장 지역적인 혹은 프로젝트에 국한 된 import에 대해 rename하라.  
+
+`Import`들은 그룹으로 구성하며, import 그룹 사이에는 공백으로 구분하라. Standard library pckage들은 항상 첫 그룹에 위치 하라.
+```go
+package main
+
+import (
+	"fmt"
+	"hash/adler32"
+	"os"
+
+	"appengine/foo"
+	"appengine/user"
+
+        "github.com/foo/bar"
+	"rsc.io/goversion/version"
+)
+```
+`goimport`가 당신을 위해 이를 해줄 것이다.
+> `golang`은 '뭘 이런 것 까지?' 라는 생각을 하게 되는 순간이 자주 있다. 이것은 외부 패키지를 사용하기 위한 `import` 구문에 대한 내용인데, `golang`의 짖궂은 점 중 하나가 이런 것이다. 하지만 중요한 것은 `golang`은 이러한 것을 단순히 개발자의 짐으로 남겨두지 않고, 항상 이것을 자동화 할 수 있는 수단을 함께 제공한다. `gofmt` 항목에서 소개했던 `goimport` 툴을 쓰기만 하면 된다. built-in 툴이므로 이미 존재하며, 이 것 외에 생산적이지 않은 여러 요소들을 통일하여 준다. 쓰지 않을 이유가 없다.
+
+### 
+
+
+
+
 
 
 
