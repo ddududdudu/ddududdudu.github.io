@@ -3,7 +3,7 @@ layout: post
 title: "[golang] Code Review Comment"
 description: Golang project에 대한 code review 진행 시 중점적으로 보아야 할 common mistake.
 categories: blog
-tags: [golang]
+tags: [golang, go, codereviewcomment, code, review, comment]
 image:
 feature:
 date: 2018-12-16T16:08:50-04:00
@@ -196,6 +196,11 @@ if err != nil {
 ```
 > 가독성의 문제인데, 같이 일하는 동료 뿐만 아니라 당장 내일의 나를 위해서라도 가독성은 가능하면 추구하는게 좋다. 솔직히 말하자면, 짧고 아름다운 코드 보다는 다소 길더라도 단순하고 바로 이해 가능한 코드가 좋다고 생각하는 편이다. `golang`의 경우 수 많은 error handling으로 인해 생각보다 코드가 길어지고 지저분해 보이는 경향이 있는데, 받아들이자.
 
+### Initialisms
+이니셜이나 약어(e.g. "URL" 또는 "NATO")로 이루어진 단어의 경우 일관성이 있다. 예를 들어, "URL"은 절대로 "Url"과 같은 모습이 아닌 "URL" 또는 "url"로 존재("urlPony" 또는 "URLPony"와 같은)해야 한다. 또 다른 예로, ServerHTTP이지 ServerHttp가 아니다. 여러 단어로 이루어진 식별자의 경우 "xmlHTTPRequest" 또는 "XMLHTTPRequest" 와 같이 사용하면 된다.  
+이 룰은 또한 "Identity Document"의 약자인 "ID"에도 적용 되는데("ego", "superego" 와 함끼 사용되는 "id"가 아닌), 따라서 "appId" 가 아닌 "appID"로 사용 되어야 한다.  
+`protocol buffer` 컴파일러에 의해 생성 된 코드는 이 룰에서 제외한다. 인간이 작성한 코드는 기계에 의해 생성 된 코드보다 더 높은 표준을 유지해야 한다.
+> 이름을 짓는 것은 어려운 일 중에 하나이다. 사실 이래도 좋고 저래도 좋은 문제 중 하나일 뿐이지만, 사람마다 선호도가 다르고 팀 마다 표준이 다를 수 있기 때문이다. 앞으로는 이 룰에 따를 예정이다.
 
 
 
