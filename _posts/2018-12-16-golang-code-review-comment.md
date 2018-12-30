@@ -283,7 +283,58 @@ func (f *Foo) Location() (lat, long float64, err error)
 마지막으로, deffered closure 에서 결과 파라미터의 값을 변경하기 위해 네이밍을 필요로 하는 경우가 있다. 이것은 언제나 OK다.
 > `golang`에서는 `multiple return value`를 지원하고, 단순히 function의 signature에서는 각 파라미터의 이름을 생략 가능하다. 생략 가능하다는 말은 이름을 붙여줄 수도 있다는 얘긴데, 명확히 이름을 부여 해야 하는 경우, 잘못된 의도로 이름을 부여하는 경우, 굳이 이름을 부여할 필요가 없는 경우 등을 잘 판단해서 코드의 간결함과 명확성을 유지할 수 있어야겠다.
 
+### Naked Returns
+[Named Result Parameters](https://ddududdudu.github.io/blog/2018/12/16/golang-code-review-comment/#named-result-parameters)를 참고하자.
+> 이럴거면 왜 별도 항목으로..
 
+### Package Comments
+`godoc`에 의해 표현 되는 모든 코멘트들과 마찬가지로 패키지 코멘트는 공백 없이 패키지 절에 인접하여 존재해야 한다.
+```go
+// Package math provides basic constants and mathematical functions.
+package math
+```
+```go
+/*
+Package template implements data-driven templates for generating textual
+output such as HTML.
+....
+*/
+package template
+```
+다른 코멘트와는 달리 `package main`을 위한 코맨트는 바이너리 네임 다음에 위치해도 괜찮으며(처음에 위치한다면 대문자로 시작해도 무방함), 예를 들어 `seedgen` 디렉터리에 위치한 `package main`의 경우 아래와 같이 작성할 수 있다:
+```go
+// Binary seedgen ...
+package main
+```
+또는
+```go
+// Command seedgen ...
+package main
+```
+또는
+```go
+// Program seedgen ...
+package main
+```
+또는
+```go
+// The seedgen command ...
+package main
+```
+또는 
+```go
+// The seedgen program ...
+package main
+```
+또는 
+```go
+// Seedgen ..
+package main
+```
+위는 그에 대한 적절한 예이며, 이 예들을 바탕으로 한 현명한 변형 또한 혀용 가능하다.  
+소문자로 문장을 시작하는 경우 이는 공개적으로 접근 가능한 것으로 보이고, 문장의 첫 단어는 대문자로 시작하는 적절한 영어 문장이 되어야 하므로 허용 가능한 옵션이 될 수 없음을 유의하여야 한다.  
+바이너리의 이름이 첫 단어인 경우, command line 호출시 사용하는 스펠링과 일치 하지 않더라도 대분자로 시작할 필요가 있다.  
+[Effective Go - Commentary](https://golang.org/doc/effective_go.html#commentary)를 참고하라.
 
 
 
