@@ -337,6 +337,12 @@ package main
 [Effective Go - Commentary](https://golang.org/doc/effective_go.html#commentary)를 참고하라.
 > `godoc`에 의한 패키지 문서화는 패키지에 대한 코멘트를 바탕으로 진행하게 된다. 따라서 이는 외부에 공개되는 패키지에 대한 공식 설명이 되므로, 이에 대한 코멘트 가이드라인을 따르는 것이 맞다.
 
+### Package Names
+패키지 내부에서의 이름에 대한 모든 참조는 패키지 이름을 이용해 이루어지므로, 식별자에서 해당 패키지 이름을 생략할 수 있다. 예를 들어, 클라이언트가 `chubby.ChubbyFile`이라고 사용하게 되는 `ChubbyFile`이라는 타입은 불필요하다. 대신에, 이를 `File`이라고 네이밍 함으로써 클라이언트가 `chubby.File`이라고 사용할 수 있게 하라. `util`, `common`, `misc`, `api`, `types`, `interfaces`와 같은 의미 없는 패키지 이름을 피하라.  
+[Effective Gp - package-names](http://golang.org/doc/effective_go.html#package-name)와 [Go Blog - package-names](http://blog.golang.org/package-names)를 참고하자.
+> 패키지에 대한 참조(타입, 함수 등)는 패키지 이름을 통한 접근으로 이루어진다. 패키지 이름을 굳이 타입이나 함수의 이름에 넣을 경우 패키지 외부에서 사용할 때 쓸데 없는 이름의 중복이 발생한다. (내부에서 사용하는 경우도 마찬가지) 
+`util`이나 `common` 같은 패키지는 나도 종종 만들곤 했는데, 결국 패키지의 역할이 모호하기 때문에 발생하는 일이다. 서랍 한 켠에 넣어두고 언젠가는 정리하겠지 하고 방치하게 되는 모습이다. 정확히 그 역할을 명시할 수 있는 패키지로 세분화 하거나 정확히 그 역할을 하는 패키지를 찾아서 옮겨주는 것이 맞다.
+
 
 
 
