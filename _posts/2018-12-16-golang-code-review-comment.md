@@ -341,7 +341,19 @@ package main
 패키지 내부에서의 이름에 대한 모든 참조는 패키지 이름을 이용해 이루어지므로, 식별자에서 해당 패키지 이름을 생략할 수 있다. 예를 들어, 클라이언트가 `chubby.ChubbyFile`이라고 사용하게 되는 `ChubbyFile`이라는 타입은 불필요하다. 대신에, 이를 `File`이라고 네이밍 함으로써 클라이언트가 `chubby.File`이라고 사용할 수 있게 하라. `util`, `common`, `misc`, `api`, `types`, `interfaces`와 같은 의미 없는 패키지 이름을 피하라.  
 [Effective Gp - package-names](http://golang.org/doc/effective_go.html#package-name)와 [Go Blog - package-names](http://blog.golang.org/package-names)를 참고하자.
 > 패키지에 대한 참조(타입, 함수 등)는 패키지 이름을 통한 접근으로 이루어진다. 패키지 이름을 굳이 타입이나 함수의 이름에 넣을 경우 패키지 외부에서 사용할 때 쓸데 없는 이름의 중복이 발생한다. (내부에서 사용하는 경우도 마찬가지) 
-`util`이나 `common` 같은 패키지는 나도 종종 만들곤 했는데, 결국 패키지의 역할이 모호하기 때문에 발생하는 일이다. 서랍 한 켠에 넣어두고 언젠가는 정리하겠지 하고 방치하게 되는 모습이다. 정확히 그 역할을 명시할 수 있는 패키지로 세분화 하거나 정확히 그 역할을 하는 패키지를 찾아서 옮겨주는 것이 맞다.
+`util`이나 `common` 같은 패키지는 나도 종종 만들곤 했는데, 결국 패키지의 역할이 모호하기 때문에 발생하는 일이다. 서랍 한 켠에 넣어두고 언젠가는 정리하겠지 하고 방치하게 되는 모습이다. 그 역할을 명시할 수 있는 패키지로 세분화 하거나 정확히 그 역할을 하는 패키지를 찾아서 옮겨주는 것이 맞다.
+
+### Pass Values
+단지 몇 바이트를 아끼기 위해 포인터를 함수 호출의 인자로 넘기지 말라. 함수 내부에서 포인터 매개 변수를 단지 역참조(`*x`)하는 형태로만 사용하고 있다면 그 매개 변수는 포인터가 아닌 값이 전달 되어야 한다. 일반적인 경우로 문자열에 대한 포인터(`*string`)이나 인터페이스 값에 대한 포인터(`*io.Reader`)도 포함 된다. 이 두 경우 모두 고정 크기의 값을 가지므로 직접 전달할 수 있다. 이 조언은 큰 크기의 구조체(`struct`)나 크기가 커질 수 있는 작은 구조체에는 적용 되지 않는다.
+> 값을 직접 전달하는 경우가 약간의 죄책감을 동반 하는 경우가 많기 때문에(왜??..) 무의식적으로 `primitive type`을 넘어서는 값에 대한 전달을 `pointer`를 통해 하는 경우가 많다. 사실 포인터를 사용해야 하는 경우가 명확하기 때문에 큰 이견은 없을 것이다.
+
+### Receiver Names
+메서드의 리시버 이름은 그 정체성을 반영한 이름이어야 한다. 종종 하나 또는 두 문자로 이루어진 약어(예를 들어 'Client'에 대해 'c'나 'cl'를 사용)를 사용하는데, 이것으로 충분하다. `me`, `this` 혹은 `self`와 같이 OOP language에서 메서드에 특별한 의미를 부여하기 위해 사용하는 일반적인 식별자 이름은 사용하지 말라. `golang`에서 메서드의 `리시버`는 또 하나의 파라미터이므로 적절한 이름을 가져야 한다. 메서드의 인자 정도로 
+ 
+
+The name of a method's receiver should be a reflection of its 저; often a one or two letter abbreviation of its type suffices (such as "c" or "cl" for "Client"). Don't use generic names such as "me", "this" or "self", identifiers typical of object-oriented languages that gives the method a special meaning. In Go, the receiver of a method is just another parameter and therefore, should be named accordingly. The name need not be as descriptive as that of a method argument, as its role is obvious and serves no documentary purpose. It can be very short as it will appear on almost every line of every method of the type; familiarity admits brevity. Be consistent, too: if you call the receiver "c" in one method, don't call it "cl" in another.
+
+
 
 
 
