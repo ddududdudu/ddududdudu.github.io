@@ -348,10 +348,26 @@ package main
 > 값을 직접 전달하는 경우가 약간의 죄책감을 동반 하는 경우가 많기 때문에(왜??..) 무의식적으로 `primitive type`을 넘어서는 값에 대한 전달을 `pointer`를 통해 하는 경우가 많다. 사실 포인터를 사용해야 하는 경우가 명확하기 때문에 큰 이견은 없을 것이다.
 
 ### Receiver Names
-메서드의 리시버 이름은 그 정체성을 반영한 이름이어야 한다. 종종 하나 또는 두 문자로 이루어진 약어(예를 들어 'Client'에 대해 'c'나 'cl'를 사용)를 사용하는데, 이것으로 충분하다. `me`, `this` 혹은 `self`와 같이 OOP language에서 메서드에 특별한 의미를 부여하기 위해 사용하는 일반적인 식별자 이름은 사용하지 말라. `golang`에서 메서드의 `리시버`는 또 하나의 파라미터이므로 적절한 이름을 가져야 한다. 메서드의 인자 정도로 
- 
+메서드의 리시버 이름은 그 정체성을 반영한 이름이어야 한다. 종종 하나 또는 두 문자로 이루어진 약어(예를 들어 'Client'에 대해 'c'나 'cl'를 사용)를 사용하는데, 이것으로 충분하다. `me`, `this` 혹은 `self`와 같이 OOP language에서 메서드에 특별한 의미를 부여하기 위해 사용하는 일반적인 식별자 이름은 사용하지 말라. `golang`에서 메서드의 `리시버`는 또 하나의 파라미터이므로 적절한 이름을 가져야 한다. 리시버 이름은 역할이 명확하므로 메서드의 인자 수준까지 설명적일 필요는 없으며 문서화할 목적으로 제공 될 목적 또한 아니다. 리시버 이름은 거의 모든 라인에 나타날 수 있기에 매우 짧을 수 있으며, 익숙함 만큼이나 간결함을 인정한다. 일관성을 유지하는 것도 중요한데, 만약 하나의 메서드에서 리시버 이름을 `c`로 사용 했다면, 다른 메서드에서 `cl` 등의 다른 이름을 사용하지 않도록 해야 한다.
+> `golang`의 언어적 특징 중 하나인 `receiver`에 대한 내용이다. 특정 `type`에 메서드를 바인딩 하는 개념인데, 목적에 따라 `value receiver` 혹은 `pointer receiver`를 사용할 수 있다. (이 내용은 별도 포스팅으로 한 번 다뤄야 겠다.) 본 코멘트에서도 언급 되었지만 자바에서 사용하는 `this`와 의미적인 유사성이 있기 때문에 리시버의 이름을 친숙하게 `this`로 하는 코드를 간혹 볼 수 있다. 사실 메서드의 시그니처만 확인 하면 리시버에 바인딩 된 타입이 무엇인지 알 수 있기 때문에, 변수나 함수의 이름을 짓는 일의 범위를 벗어나지 않고 사실 `this`를 사용하는 것도 나쁘진 않다고 생각한다. 어쨌든 리시버라는 특성 상 해당 메서드 내에서 빈번히 언급될 확률이 높으므로 코드의 가독성 및 일관성을 위한 리시버 네이밍은 중요하다.
 
-The name of a method's receiver should be a reflection of its 저; often a one or two letter abbreviation of its type suffices (such as "c" or "cl" for "Client"). Don't use generic names such as "me", "this" or "self", identifiers typical of object-oriented languages that gives the method a special meaning. In Go, the receiver of a method is just another parameter and therefore, should be named accordingly. The name need not be as descriptive as that of a method argument, as its role is obvious and serves no documentary purpose. It can be very short as it will appear on almost every line of every method of the type; familiarity admits brevity. Be consistent, too: if you call the receiver "c" in one method, don't call it "cl" in another.
+### Receiver Type
+`value recevier`를 사용할 것인지 `pointer receiver`를 사용할 것인지를 선택하는 일은 (특히 `golang` 입문자에게) 어려운 일일 수 있다. 만약 무엇인가 미심쩍다면, `pointer receiver`를 사용하라. 하지만 기본 타입의 값이나 바뀌지 않는 작은 구조체와 같이 효율성을 이유로 `value receiver`를 사용하는 것이 합당한 몇몇 순간이 있다. 아래는 `receiver`의 type을 결정하기 위한 유용한 가이드라인이다.
+* 만약 `receiver`가 `map`, `func` 또는 `chan`이라면 `pointer receiver`를 사용하지 말라. 만약 `receiver`가 `slice`이고, 메서드가 그 `slice`를 `reslice` 또는 `reallocate` 하지 않는다면 역시 `pointer receiver`를 사용하지 말라.
+* 만약 메서드가 `receiver`를 변경할 필요가 있다면 *반드시* `pointer receiver`를 사용해야 한다.
+* 만약 `receiver`가 `sync.Mutex` 또는 유사한 성격의 동기화를 위한 필드를 가지는 구조체인 경우, 복사를 방지하기 위해 반드시 `pointer receiver`를 사용해야 한다.
+* 만약 `receiver`가 큰 크기의 구조체 혹은 배열인 경우, `pointer receiver`를 사용하는 것이 더욱 효율적이다. 
+
+Choosing whether to use a value or pointer receiver on methods can be difficult, especially to new Go programmers. If in doubt, use a pointer, but there are times when a value receiver makes sense, usually for reasons of efficiency, such as for small unchanging structs or values of basic type. Some useful guidelines:
+
+If the receiver is a map, func or chan, don't use a pointer to them. If the receiver is a slice and the method doesn't reslice or reallocate the slice, don't use a pointer to it.
+If the method needs to mutate the receiver, the receiver must be a pointer.
+If the receiver is a struct that contains a sync.Mutex or similar synchronizing field, the receiver must be a pointer to avoid copying.
+If the receiver is a large struct or array, a pointer receiver is more efficient. How large is large? Assume it's equivalent to passing all its elements as arguments to the method. If that feels too large, it's also too large for the receiver.
+Can function or methods, either concurrently or when called from this method, be mutating the receiver? A value type creates a copy of the receiver when the method is invoked, so outside updates will not be applied to this receiver. If changes must be visible in the original receiver, the receiver must be a pointer.
+If the receiver is a struct, array or slice and any of its elements is a pointer to something that might be mutating, prefer a pointer receiver, as it will make the intention more clear to the reader.
+If the receiver is a small array or struct that is naturally a value type (for instance, something like the time.Time type), with no mutable fields and no pointers, or is just a simple basic type such as int or string, a value receiver makes sense. A value receiver can reduce the amount of garbage that can be generated; if a value is passed to a value method, an on-stack copy can be used instead of allocating on the heap. (The compiler tries to be smart about avoiding this allocation, but it can't always succeed.) Don't choose a value receiver type for this reason without profiling first.
+Finally, when in doubt, use a pointer receiver.
 
 
 
