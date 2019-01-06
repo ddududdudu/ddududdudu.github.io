@@ -356,18 +356,12 @@ package main
 * 만약 `receiver`가 `map`, `func` 또는 `chan`이라면 `pointer receiver`를 사용하지 말라. 만약 `receiver`가 `slice`이고, 메서드가 그 `slice`를 `reslice` 또는 `reallocate` 하지 않는다면 역시 `pointer receiver`를 사용하지 말라.
 * 만약 메서드가 `receiver`를 변경할 필요가 있다면 *반드시* `pointer receiver`를 사용해야 한다.
 * 만약 `receiver`가 `sync.Mutex` 또는 유사한 성격의 동기화를 위한 필드를 가지는 구조체인 경우, 복사를 방지하기 위해 반드시 `pointer receiver`를 사용해야 한다.
-* 만약 `receiver`가 큰 크기의 구조체 혹은 배열인 경우, `pointer receiver`를 사용하는 것이 더욱 효율적이다. 
-
-Choosing whether to use a value or pointer receiver on methods can be difficult, especially to new Go programmers. If in doubt, use a pointer, but there are times when a value receiver makes sense, usually for reasons of efficiency, such as for small unchanging structs or values of basic type. Some useful guidelines:
-
-If the receiver is a map, func or chan, don't use a pointer to them. If the receiver is a slice and the method doesn't reslice or reallocate the slice, don't use a pointer to it.
-If the method needs to mutate the receiver, the receiver must be a pointer.
-If the receiver is a struct that contains a sync.Mutex or similar synchronizing field, the receiver must be a pointer to avoid copying.
-If the receiver is a large struct or array, a pointer receiver is more efficient. How large is large? Assume it's equivalent to passing all its elements as arguments to the method. If that feels too large, it's also too large for the receiver.
-Can function or methods, either concurrently or when called from this method, be mutating the receiver? A value type creates a copy of the receiver when the method is invoked, so outside updates will not be applied to this receiver. If changes must be visible in the original receiver, the receiver must be a pointer.
-If the receiver is a struct, array or slice and any of its elements is a pointer to something that might be mutating, prefer a pointer receiver, as it will make the intention more clear to the reader.
-If the receiver is a small array or struct that is naturally a value type (for instance, something like the time.Time type), with no mutable fields and no pointers, or is just a simple basic type such as int or string, a value receiver makes sense. A value receiver can reduce the amount of garbage that can be generated; if a value is passed to a value method, an on-stack copy can be used instead of allocating on the heap. (The compiler tries to be smart about avoiding this allocation, but it can't always succeed.) Don't choose a value receiver type for this reason without profiling first.
-Finally, when in doubt, use a pointer receiver.
+* 만약 `receiver`가 큰 크기의 구조체 혹은 배열인 경우, `pointer receiver`를 사용하는 것이 더욱 효율적이다. 얼마나 커야 큰 것인가? 메서드는 구조체의 모든 요소를 인자로 전달하는 것과 동일하게 받아 들인다. 정말로 크다고 느낀다면 그것은 또한 리시버에게도 큰 것이다.
+* 함수이든 메서드이든 동시에 혹은 메서드가 호출 되었을 때 리시버를 변경할 수 있는가? `value type`은 메서드가 호출 되었을 때 리시버의 복사본을 생성하기 때문에 리시버에 대한 외부로부터의 변경이 리시버에 적용 되지 못한다. 만약 원본 리시버에 대한 변경이 필요한 경우 리시버는 반드시 `pointer receiver`이어야 한다.
+* 만약 리시버가 해당 요소가 변경 될 수 있는 포인터인 구조체 혹은 배열, 슬라이스인 경우 사용자에게 더욱 명확하게 그 의도를 전달할 수 있도록 `pointer receiver`를 사용해야 한다.
+* 만약 변경 되지 않는 필드 또는 포인터가 아닌 필드를 가지거나 `string`과 같은 단순한 기본 타입을 가지는 작은 배열 혹은 구조체 리시버인 경우(예를 들어 `time.Time` 타입 과 같은) `value receiver` 또한 합당한 선택이 될 수 있다. `value recevier`는 생성 될 수 있는 `garbage`의 양을 줄일 수 있고, 만약 `value`가 `value method`로 전달 될 경우 `heap`을 새로 할당하는 대신 `stack` 상의 복사를 활용할 수 있다. (`compiler`는 항상 성공하지는 못하더라도 가능한 똑똑하게 allocation을 회피하고자 노력한다) 이러한 측정 혹은 고려 없이 `value receiver`를 선택하지 말라.
+최종적으로, 의심 스럽다면, `pointer receiver`를 사용하라.
+> `pointer receiver`와 `value recevier`에 대한 차이는 별도 포스팅으로 정리를 해보고 싶었는데 이 코멘트로 마무리 하면 될 것 같다. 흥미로운 점은, 어떤 리시버를 사용할지 명확하지 않다면 일단은 `pointer receiver`를 사용하라는 점이다. 사실 메서드 입장에서는 해당 메서드를 호출할 때 리시버가 `value receiver`이든 `pointer receiver`이든 상관 없다. 단지 해당 메서드에서 접근하는 리시버의 값이 원본 리시버의 `복사본`이냐 `원본`이냐 하는 점이 결정적인 고려 요소가 될 것이다. `원본` 값을 유지하고 변경하고 공유해야 한다면 `pointer receiver`를 사용 해야 할 것이고(사용 해야만 하고) 그게 아니라면 굳이 `garbage collection`의 대상이 되어야 하는 `heap allocation`을 피할 수 있도록 `value receiver`를 사용하자.
 
 
 
