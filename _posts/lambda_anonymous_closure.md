@@ -54,3 +54,65 @@ int main() {
 
 `array의 이름`은 `array의 첫 번째 요소를 가리키는 포인터`이기 때문이다. `sizeof` operator는 단지 compile time에 결정 가능한 값을 출력할 뿐이므로 해당 `array`가 선언 된 code block에서는 예상한 값을 얻을 수 있는 반면, 단순히 포인터가 전달 되는 함수 인자로서의 배열은 알 방법이 없다. 이는 아예 고정 크기 배열로서의 파라미터를 정의한 `getSizeOfFixedArray()` 함수일지라도 마찬가지이다.  
 따라서 `C`에서 `array`는 `array` 자체로서 파라미터 전달이 불가능하므로 `일급 객체`가 아님을 알 수 있다.  
+
+### First-class function
+말 그대로, `First-class object` 로서의 `function`을 의미한다. 다섯 가지 `first-class object`의 조건에 더해 아래 두 가지 조건을 추가로 충족해야 한다.
+1. 런타임 생성이 가능해야 함.
+2. 익명으로 생성 가능해야 함.
+결국 `일급 함수(first-class function)`란 함수 자체를 변수에 할당할 수 있고(따라서 매개 변수로 넘기거나 데이터 구조 내 저장 가능) 함수 또는 메서드의 리턴 값으로 사용 가능하다는 의미이다. 아래 `Go` 예제를 통해 확인해보자.
+```go
+package main
+
+import (
+    "fmt"
+)
+
+type CalcType string
+const (
+    add CalcType = "add"
+    sub CalcType = "sub"
+)
+
+func main() {
+    a := 10
+    b := 5
+    
+    calcFunc := CalcFunction(add)
+    fmt.Printf("add : %d\n", calcFunc(a, b))
+    
+    calcFunc = CalcFunction(sub)
+    fmt.Printf("sub : %d\n", calcFunc(a, b))
+}
+
+func CalcFunction(calcType CalcType) func(int, int) int {
+    switch calcType {
+    case add:
+        return AddFunc
+    case sub:
+        return SubFunc
+    default:
+        fmt.Println("unsupported calculation type: " + calcType)
+        return nil
+    }
+}
+
+func AddFunc(a, b int) int {
+    return a+b
+}
+
+func SubFunc(a, b int) int {
+    return a-b
+}
+
+// add : 15
+// sub : 5
+```
+`CalcFunction()`은 전달 받은 파라미터에 따라 `func(int, int) int` 라는 시그니처를 가지는 함수를 리턴하고 있다. `AddFunc()` 이든 `SubFunc()` 이든 시그니처가 일치 하므로 상관 없으며, 리턴 된 함수는 변수 `calcFunc`에 할당 되고 이후 `calcFunc()` 호출을 통해 사용할 수 있다. 즉 함수를 
+
+
+따라서 `C`에서 `array`는 `array` 자체로서 파라미터 전달이 불가능하므로 `일급 객체`가 아님을 알 수 있다.  가지 
+따라서 `C`에서 `array`는 `array` 자체로서 파라미터 전달이 불가능하므로 `일급 객체`가 아님을 알 수 있다.
+
+### Anonymous function
+
+
