@@ -17,17 +17,17 @@ date: 2019-02-20T21:31:50-04:00
 - 변수나 데이터 구조안에 담을 수 있음.
   > 위 조건에 따라 `C 언어`의 `array`는 `일급 객체`가 아니다.
   >  ```c     
-     int main() {
-        int array[10];
-        int sizeOfArray = getSizeOfArray(array);
-        
-        printf("Size of array is %d\n", sizeofArray);
-     }
-     
-     int getSizeOfArray(int[] array) {
-        return sizeof(array);
-     }
-     ```
+  >  int main() {
+  >     int array[10];
+  >     int sizeOfArray = getSizeOfArray(array);
+  >     
+  >     printf("Size of array is %d\n", sizeofArray);
+  >  }
+  >  
+  >  int getSizeOfArray(int[] array) {
+  >     return sizeof(array);
+  >  }
+  >  ```
   > array의 이름은 array의 첫 번째 요소를 가리키는 포인터이다. array의 이름만으로는 배열의 크기와 같은 정보를 알 수 없기 때문에 배열 자체를 대입한다고 보기 어려우므로 일급 객체가 아니다. 
 - 파라미터로 전달할 수 있음.
 - 반환값으로 사용할 수 있음.
