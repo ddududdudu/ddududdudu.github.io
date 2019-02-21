@@ -75,15 +75,12 @@ const (
     sub CalcType = "sub"
 )
 
-func main() {
-    a := 10
-    b := 5
-    
-    calcFunc := CalcFunction(add)
-    fmt.Printf("add : %d\n", calcFunc(a, b))
-    
-    calcFunc = CalcFunction(sub)
-    fmt.Printf("sub : %d\n", calcFunc(a, b))
+func AddFunc(a, b int) int {
+    return a+b
+}
+
+func SubFunc(a, b int) int {
+    return a-b
 }
 
 func CalcFunction(calcType CalcType) func(int, int) int {
@@ -98,20 +95,73 @@ func CalcFunction(calcType CalcType) func(int, int) int {
     }
 }
 
-func AddFunc(a, b int) int {
-    return a+b
-}
-
-func SubFunc(a, b int) int {
-    return a-b
+func main() {
+    a := 10
+    b := 5
+    
+    calcFunc := CalcFunction(add)
+    fmt.Printf("add : %d\n", calcFunc(a, b))
+    
+    calcFunc = CalcFunction(sub)
+    fmt.Printf("sub : %d\n", calcFunc(a, b))
 }
 
 // add : 15
 // sub : 5
 ```
-`CalcFunction()`은 전달 받은 인수에 따라 `func(int, int) int` 라는 시그니처를 가지는 함수를 리턴하고 있다. `AddFunc()` 이든 `SubFunc()` 이든 시그니처가 일치 하므로 리턴 된 함수는 변수 `calcFunc`에 할당 되고 이후 `calcFunc()` 호출을 통해 사용할 수 있다. 즉 함수를 변수에 대입하고, 인자로서 전달하고, 함수의 리턴 값으로 반환 할 수 있으므로 `Go` 의 `함수`는 `일급 객체`이다. `일급 객체`로서의 `함수` 개념의 부분 집합으로 `함수를 인자로 받을 수 있고 && 함수를 리턴할 수 있는 함수`를 `high-order function(고차 함수, 고계 함수)` 라고 한다.    
-`Java`의 경우는 어떨까? `Java`의 세계에서는 `primitive type`을 제외한 모든 것들은 `Object`로 표현된다. `Function`이라는 개념도 `Java`에서는 특정 `object`를 추상화하는 `class`의 `method`로서만 존재할 수 있을 뿐이다. 즉, 함수라는 형태의 코드 블록 자체만을 다루는 것을 언어적으로 지원하지 않는다.  
-하지만 `C`의 경우는 조금 고민이 필요할 것 같다. `C`에서는 `function`을 가리키는 `pointer`인 `function pointer`를 이용하면 동일하게 함수를 대입/전달/반환 할 수 있다. 그럼 `C`에서도 `function`은 `일급 객체`인걸까? 
+`CalcFunction()`은 전달 받은 인수에 따라 `func(int, int) int` 라는 시그니처를 가지는 함수를 리턴하고 있다. `AddFunc()` 이든 `SubFunc()` 이든 시그니처가 일치 하므로 리턴 된 함수는 변수 `calcFunc`에 할당 되고 이후 `calcFunc()` 호출을 통해 사용할 수 있다. 즉 함수를 변수에 대입하고, 인자로서 전달하고, 함수의 리턴 값으로 반환 할 수 있으므로 `Go` 의 `함수`는 `일급 객체`이다. `일급 객체로서의 함수` 개념의 부분 집합으로 `함수를 인자로 받을 수 있고 && 함수를 리턴할 수 있는 함수`를 `high-order function(고차 함수, 고계 함수)` 라고 한다.    
+`Java`의 경우는 어떨까? `Java`의 세계에서는 `primitive type`을 제외한 모든 것들은 `Object`로 표현된다. `Function`이라는 개념(인자와 리턴 값을 가질 수 있는 코드 블럭)도 `Java`에서는 특정 `object`를 추상화하는 `class`의 `method`로서만 존재할 수 있을 뿐이다. 즉, 함수라는 형태의 코드 블록 자체만을 다루는 것을 언어적으로 지원하지 않는다.  
+하지만 `C`의 경우는 조금 고민이 필요할 것 같다. `C`에서는 `function`을 가리키는 `pointer`인 `function pointer`를 이용하면 동일하게 함수를 대입/전달/반환 할 수 있다. 그럼 `C`에서도 `function`은 `일급 객체`인걸까? 위 예제를 `C`로 동일하게 구현하면 아래와 같다.
+```C
+#include <stdio.h>
+
+typedef int(*fpCalcFunc)(int, int);
+
+typedef enum e_CalcType {
+    ADD = 0,
+    SUB
+} CalcType;
+
+int AddFunc(int a, int b) {
+    return a+b;
+}
+
+int SubFunc(int a, int b) {
+    return a-b;
+}
+
+fpCalcFunc CalcFunction(CalcType calcFuncType) {
+    switch (calcFuncType) {
+        case ADD:
+            return AddFunc;
+            break;
+        case SUB:
+            return SubFunc;
+            break;
+        default:
+            printf("unsupported calculation type: %s\n", calcFuncType);
+    }
+    
+    return NULL;
+}
+
+int main() {
+    int a = 10;
+    int b = 5;
+    fpCalcFunc calcFunc = NULL;
+    
+    calcFunc = CalcFunction(ADD);
+    printf("add : %d\n", calcFunc(a, b));
+    
+    calcFunc = CalcFunction(SUB);
+    printf("sub : %d\n", calcFunc(a, b));
+}
+
+// add : 15
+// sub : 5
+```
+굳이 이런 예제가 아니더라도 이미 `C`에서 정렬을 위한 `qsort()` 호출 시, 비교하는 로직을 담은 `함수`를 인자로 전달하고 있음을 잘 알고 있다. 여튼 `C`의 `함수`는 `함수 포인터`를 이용하면 (함수 포인터)변수에 할당할수도 있고, 함수의 인자로 넘길수도 있으며, 함수의 리턴 값으로 반환할수도 있다.  
+하지만 언어 자체적으로 `함수`를 표현하기 위한 키워드가 존재하지 않음으로 인해 `포인터`의 힘을 빌어 마치 `일급 객체`인 것 처럼 사용할 수 있는 것에 더 가깝다고 생각한다. (`포인터`를 이용해 `C++`의 `call-by-reference` 인 것 처럼 사용할 수 있지만 실상은 전달하는 값이 `address` 일 뿐인 것 처럼)  
 
 ### First-class function and anonymous function
 `First-class function`이란 말 그대로, `First-class object` 로서의 `function`을 의미한다. 다섯 가지 `first-class object`의 조건에 더해 아래 두 가지 조건을 추가로 충족해야 한다.
