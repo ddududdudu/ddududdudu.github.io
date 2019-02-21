@@ -211,13 +211,43 @@ func CalcFunction(calcType CalcType) func(int, int) int {
 // add : 15
 // sub : 5
 ```
-`First-class function` 설명에서 사용한 예제와 동일하지만, 명시적으로 named function이었던 AddFunc()와 SubFunc()을 정의 하는 대신, 동일한 시그니처와 구현부를 가진 코드 블럭을 리턴하고 있다. 
+`First-class function` 설명에서 사용한 예제와 동일하지만, 명시적으로 named function이었던 AddFunc()와 SubFunc()을 정의 하는 대신, 동일한 시그니처와 구현부를 가진 코드 블럭을 리턴하고 있다. 이름이 없는 `함수` 즉, `anonymous function`인 것이다. 
 
 
 
 따라서 `C`에서 `array`는 `array` 자체로서 파라미터 전달이 불가능하므로 `일급 객체`가 아님을 알 수 있다.  가지 
 따라서 `C`에서 `array`는 `array` 자체로서 파라미터 전달이 불가능하므로 `일급 객체`가 아님을 알 수 있다.
 
-### Anonymous function
+### Closure
+`클로저`를 한 문장으로 정의해보자면 아래와 같다고 생각한다.
+> 의존하는 객체에 대한 문맥을 유지하고 있는 코드 블록
+아래 코드를 보자.
+```go
+package main
+
+import (
+    "fmt"
+)
+
+func Adder(base int) func(int number) int {
+    return func(int number) int {
+        return base + number
+    }
+}
+
+func main() {
+    fiveAdder := Adder(5)
+    tenAdder  := Adder(10)
+    
+    fmt.Printf("Adder with base 5  : %d\n", fiveAdder(5))
+    fmt.Printf("Adder with base 10 : %d\n", tenAdder(5))
+}
+
+// Adder with base 5  : 10
+// Adder with base 10 : 15
+```
+
+
+
 
 
