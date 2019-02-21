@@ -52,8 +52,13 @@ int main() {
 우선, `getSizeOfArray()` 함수의 시그니처에서 확인할 수 있듯 이 함수는 `int[]` 타입의 파라미터를 받고 있다. 그렇다면 결과로 `40`이 나와야 할 것 같지만(4 bytes * 10개) ~~당연하게도~~ 포인터의 크기인 `8`이 출력된다. 이에 더해서, (컴파일러 설정에 따라 다르겠지만) 위 코드를 컴파일 하면 아래와 같은 경고 메시지를 확인할 수 있다.  
 > warning: 'sizeof' on array function parameter 'array' will return size of 'int *' [-Wsizeof-array-argument] return sizeof(array);
 
-`array의 이름`은 `array의 첫 번째 요소를 가리키는 포인터`이기 때문이다. `sizeof` operator는 단지 compile-time에 결정 가능한 값을 출력할 뿐이므로 해당 `array`가 선언 된 code block에서는 예상한 값을 얻을 수 있는 반면, 단순히 포인터가 전달 되는 매개 변수로서의 배열은 알 방법이 없다. 이는 아예 고정 크기 배열로서의 파라미터를 표현 하고자 한 `getSizeOfFixedArray()` 함수일지라도 마찬가지이다.  
-따라서 `C`에서 `array`는 `array` 자체로서 파라미터 전달이 불가능하므로 `일급 객체`가 아님을 알 수 있다.  
+`array의 이름`은 `array의 첫 번째 요소를 가리키는 포인터`이기 때문이다. `sizeof` operator는 단지 compile-time에 결정 가능한 값을 출력할 뿐이므로 해당 `array`가 선언 된 code block에서는 예상한 값을 얻을 수 있는 반면, 단순히 포인터가 전달 되는 매개 변수로서의 배열은 알 방법이 없다. 이는 아예 고정 크기 배열로서의 파라미터를 표현 하고자 한 `getSizeOfFixedArray()` 함수일지라도 마찬가지이다. `C`의 `main()` 함수의 시그니처를 생각해 보면 아래 세 가지가 가능한데,
+```c
+int main();
+int main(int argc, char** argv);
+int main(int argc, char* argv[]);
+```
+`argc`가 왜 존재 할 수 밖에 없는지를 생각해보면 자명하다. 따라서 `C`에서 `array`는 `array` 자체로서 파라미터 전달이 불가능하므로 `일급 객체`가 아님을 알 수 있다.  
 
 ### Function as a first-class object
 `일급 객체`로서의 `함수`란 무엇일까? 아래 `Go` 예제를 통해 확인해보자.
