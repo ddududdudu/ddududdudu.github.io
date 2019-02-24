@@ -277,18 +277,18 @@ public class Program {
         public int add(int number);
     }
     
-	public static void main(String[] args) {
-		int base = 5;
-		
-		Addable fiveAdder = new Addable() {
-		    @Override
-		    public int add(int number) {
+    public static void main(String[] args) {
+	int base = 5;
+	
+	Addable fiveAdder = new Addable() {
+	    @Override
+	    public int add(int number) {
 		        return base + number;
-		    }
-		};
-		
-		System.out.println("Adder with base 5 : " + fiveAdder.add(5));
-	}
+	    }
+	};
+	
+	System.out.println("Adder with base 5 : " + fiveAdder.add(5));
+    }
 }
 
 // Adder with base 5 :  10
@@ -296,4 +296,10 @@ public class Program {
 `Java` 역시 `일급 함수`를 가질 수 없기 때문에 `Go`와 같은 언어 자체적인 `클로저` 지원은 없다. 하지만 위 코드처럼 `anonymous object`를 생성하고 외부 scope의 변수를 참조할 수 있다. 하지만 `Java`의 경우 이렇게 외부 scope에 대한 참조가 생기게 되면 해당 의존성이 있는 외부 변수의 값을 변경할 수 없게 된다. 즉, `read-only`로 취급되며, 이는 코드 흐름 상 의존성이 생기기 전이든 후든 관계 없다. 참조만 가능하게 되는 것이다. 이게 무슨 `클로저`냐 라는 생각이 들지만, `제한적 클로저`라는 표현으로 취급하기도 하는 모양이다.
 
 ### Lambda expression
+`람다 표현식` 만큼 다양하게 불리우고 해석 되는 용어도 흔치 않은 것 같다. 누군가는 `람다 표현식`과 `람다 함수`를 같은 의미로 사용하기도 하고, `익명 함수`를 `람다 함수`라고 하기도 한다. `람다 표현식`은 어떠한 코드 블록을 하나의 식(expression)으로 표현 하는 것을 말하며, 보통 각 언어에서의 `함수` 또는 `메서드`가 `코드 블록`에 해당 하므로 `람다 표현식`으로 표현한 `익명 함수`를 `람다 함수`라고 생각하면 될 것 같다.   
 
+`C`의 경우 `일급 함수`를 지원 하지 않으므로 애당초 `람다 함수`라는 개념에서 벗어나 있다.  
+
+`Go`는 `func` 리터럴을 통해 `익명 함수`를 표현할수는 있지만 `람다 표현식`을 지원하지는 않는다. `Go`를 `functional programming languate(함수형 프로그래밍 언어`라고 구분하지 않는 이유인데, 이는 `Go`로 `함수형 프로그래밍` 이라는 패러다임을 구현할 수 있는가 와는 다른 문제이다.  
+
+`Java`는 `JDK1.8`에서 정식으로 `lambda expression`을 `지원`하고 있다. 기존 `자바` 문법에서는 `함수` 형태의 코드 블록을 다루기 위해서는 `클래스`를 생성 하고 해당 `클래스`에 포함 되는 `메서드` 형태가 필수라는 제약이 있었다. 따라서 `익명 함수` 자체가 구현 불가능한 내용 이었지만, `람다 표현식`이 언어에 정식으로 추가 됨으로 인해서 `함수` 형태로 다룰 수 있게 되었다. 
