@@ -295,6 +295,60 @@ public class Program {
 ```
 `Java` 역시 `일급 함수`를 가질 수 없기 때문에 `Go`와 같은 언어 자체적인 `클로저` 지원은 없다. 하지만 위 코드처럼 `anonymous object`를 생성하고 외부 scope의 변수를 참조할 수 있다. 하지만 `Java`의 경우 이렇게 외부 scope에 대한 참조가 생기게 되면 해당 의존성이 있는 외부 변수의 값을 변경할 수 없게 된다. 즉, `read-only`로 취급되며, 이는 코드 흐름 상 의존성이 생기기 전이든 후든 관계 없다. 참조만 가능하게 되는 것이다. 이게 무슨 `클로저`냐 라는 생각이 들지만, `제한적 클로저`라는 표현으로 취급하기도 하는 모양이다.
 
+### Lambda calculus
+> 컴퓨터과학 및 수리논리학에서, 람다 대수 또는 람다 계산(λ-calculus, lambda-calculus)이란 변수의 네임 바인딩과 대입의 방법을 이용하여 함수 정의, 함수 적용, 귀납적 함수 추상화를 수행하고 수학 연산을 표현하는 형식 체계이다. *- [Wikipedia](https://ko.wikipedia.org/wiki/%EB%9E%8C%EB%8B%A4_%EB%8C%80%EC%88%98)* 
+
+수학적 영역이므로 개념을 확인 하는 정도로만 정리해본다. (앞으로 `함수형 프로그래밍`을 학습하며 추가적인 보충/수정이 필요하다)  
+`람다 대수`는 `함수`를 단순하게 표현할 수 있게 함으로써 `함수의 계산`이라고 하는 부분을 더 잘 이해할 수 있도록 한다. `람다 대수`를 통해 `함수`를 표현 함으로써 아래 사실을 확인할 수 있다.
+1. 함수가 반드시 이름을 가질 필요는 없다.
+2. 함수의 입력 변수 또한 이름을 가질 필요는 없다.
+3. 두 개 이상의 입력을 받는 함수는 하나의 입력을 받아 또 하나의 함수를 출력하는 함수의 연속으로 다시 쓸 수 있다. (== `Currying`)
+
+`함수형 프로그래밍`에 대해 표현하자면, 수학적으로 `람다 대수`의 개념에 맞게 모델링한 `함수`의 조합을 바탕으로 프로그램을 작성하는 것이라고 할 수 있을 것 같다.
+
+### Lambda function
+그렇다면 `람다 대수`의 개념에 따라 모델링한 `함수`를 `람다 함수`라고 부를 수 있을 것 같은데, 정확히 `람다 함수`란 무엇일까. `Go`에서는 `함수`의 이름과 그 `함수`의 입력 변수의 이름을 생략한 것, 즉 그 함수의 시그니처를 `func` 리터럴을 이용해 `익명 함수`로서 표현할 수 있다. 또한, 이 `익명 함수`에서 또 다른 `익명 함수`를 반환할 수 있고, 외부 scope의 변수를 바인딩 함으로써 두 개 이상의 입력 변수를 가지는 `함수`를 단일 입력 변수를 가지는 일련의 함수들로 다시 쓸 수 있다. 이것을 `currying`이라고 한다. 아래 코드를 보자.  
+```go
+package main
+
+import (
+	"fmt"
+)
+
+// 정수 a, b, c를 입력 받아 b와 c를 곱한 값에 a를 더한 결과를 리턴.
+func calculate(a, b, c int) int {
+	return a + b * c
+}
+
+// 정수 a를 입력 받아 b와 더한 결과를 리턴하는 함수를 리턴.
+func add(b int) func(int) int {
+	return func(a int) int {
+		return a + b;
+	}
+}
+
+// 정수 b를 입력 받아 a와 곱한 결과를 리턴하는 함수를 리턴.
+func multiply(c int) func(int) int {
+	return func(b int) int {
+		return b * c
+	}
+}
+
+func main() {
+	generalCalc := calculate(1, 2, 3)
+	
+	multiplier  := multiply(3)        
+	adder       := add(multiplier(2)) 
+	curriedCalc := adder(1)
+	
+	fmt.Printf("general = %d\ncurried = %d\n", generalCalc, curriedCalc)
+}
+
+// general = 7
+// curried = 7
+```
+정수 a, b, c를 입력 받아 b와 c를 곱한 값에 a를 더한 결과를 리턴하는 함수 `calculate()`가 있다. 이 함수를 `커링`해보자. 즉, 단일 입력 변수를 가지는 함수의 연속으로 표현을 바꿔보자는 얘기이다. 우선, `multiply(3)`을 호출해 `정수 하나를 입력 받아 3을 더한 값을 리턴하는 함수인 multiplier()`를 생성했다. 그리고 `add()`의 인수로 `multiplier(2)`를 넘기고 `adder()`를 생성했는데, 생성 된 `adder()`는 `정수 하나를 입력 받아 multiplier(2)의 결과 값을 더한 값을 리턴하는 함수`이다. 최종적으로 `add(1)`을 호출하면 `calculate()`의 동작과 같은 값을 출력하는 함수가 된다. 즉, 세 개의 매개변수를 가지는 `calculate()`를 하나의 매개변수 만을 가지는 `multiply()`, `add()`의 연속으로 표현할 수 있음을 알 수 있다.
+
 ### Lambda expression
 `람다 표현식` 만큼 다양하게 불리우고 해석 되는 용어도 흔치 않은 것 같다. 누군가는 `람다 표현식`과 `람다 함수`를 같은 의미로 사용하기도 하고, `익명 함수`를 `람다 함수`라고 하기도 한다. `람다 표현식`은 어떠한 코드 블록을 하나의 식(expression)으로 표현 하는 것을 말하며, 보통 각 언어에서의 `함수` 또는 `메서드`가 `코드 블록`에 해당 하므로 `람다 표현식`으로 표현한 `익명 함수`를 `람다 함수`라고 생각하면 될 것 같다.   
 
@@ -303,3 +357,37 @@ public class Program {
 `Go`는 `func` 리터럴을 통해 `익명 함수`를 표현할수는 있지만 `람다 표현식`을 지원하지는 않는다. `Go`를 `functional programming languate(함수형 프로그래밍 언어`라고 구분하지 않는 이유인데, 이는 `Go`로 `함수형 프로그래밍` 이라는 패러다임을 구현할 수 있는가 와는 다른 문제이다.  
 
 `Java`는 `JDK1.8`에서 정식으로 `lambda expression`을 `지원`하고 있다. 기존 `자바` 문법에서는 `함수` 형태의 코드 블록을 다루기 위해서는 `클래스`를 생성 하고 해당 `클래스`에 포함 되는 `메서드` 형태가 필수라는 제약이 있었다. 따라서 `익명 함수` 자체가 구현 불가능한 내용 이었지만, `람다 표현식`이 언어에 정식으로 추가 됨으로 인해서 `함수` 형태로 다룰 수 있게 되었다. 
+`Oracle`에서 제공하는 `Java` 스펙에서 지원하는 [`람다 표현식`의 예](https://docs.oracle.com/javase/specs/jls/se8/html/jls-15.html#jls-15.27)는 아래와 같다.
+```java
+() -> {}                // No parameters; result is void
+() -> 42                // No parameters, expression body
+() -> null              // No parameters, expression body
+() -> { return 42; }    // No parameters, block body with return
+() -> { System.gc(); }  // No parameters, void block body
+
+() -> {                 // Complex block body with returns
+  if (true) return 12;
+  else {
+    int result = 15;
+    for (int i = 1; i < 10; i++)
+      result *= i;
+    return result;
+  }
+}                          
+
+(int x) -> x+1              // Single declared-type parameter
+(int x) -> { return x+1; }  // Single declared-type parameter
+(x) -> x+1                  // Single inferred-type parameter
+x -> x+1                    // Parentheses optional for
+                            // single inferred-type parameter
+
+(String s) -> s.length()      // Single declared-type parameter
+(Thread t) -> { t.start(); }  // Single declared-type parameter
+s -> s.length()               // Single inferred-type parameter
+t -> { t.start(); }           // Single inferred-type parameter
+
+(int x, int y) -> x+y  // Multiple declared-type parameters
+(x, y) -> x+y          // Multiple inferred-type parameters
+(x, int y) -> x+y    // Illegal: can't mix inferred and declared types
+(x, final y) -> x+y  // Illegal: no modifiers with inferred types
+```
