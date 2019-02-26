@@ -28,16 +28,20 @@ date: 2019-02-20T21:31:50-04:00
 ```c     
 #include <stdio.h>
 
-int getSizeOfArray(int array[]) {
+int getSizeOfArray(int array[][]) {
     return sizeof(array);
 }
 
-int getSizeOfFixedArray(int array[10]) {
+int getSizeOfFixedArray(int array[2][5]) {
+    return sizeof(array);
+}
+
+int getSizeOfPointerArray(int (*array)[5]) {
     return sizeof(array);
 }
 
 int main() {
-    int array[10];
+    int array[2][5];
 
     printf("Size of array is %d\n", sizeof(array));
     printf("Size of calculated array is %d\n", getSizeOfArray(array));
