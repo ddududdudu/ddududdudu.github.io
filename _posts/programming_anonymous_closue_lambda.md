@@ -46,17 +46,20 @@ int main() {
     printf("Size of array is %d\n", sizeof(array));
     printf("Size of calculated array is %d\n", getSizeOfArray(array));
     printf("Size of calculated fixed array is %d\n", getSizeOfFixedArray(array));
+    printf("Size of calculated array pointer is %d\n", getSizeOfPointerArray(array));
 }
 
 // Size of array is 40
 // Size of calculated array is 8
 // Size of calculated fixed array is 8
+// Size of calculated array pointer is 8
 ```
 `C`에서의 `pointer`와 `array`의 관계에 대해서는 이 [포스팅]()을 참고하자.  
 우선, `getSizeOfArray()` 함수의 시그니처에서 확인할 수 있듯 이 함수는 `int[]` 타입의 파라미터를 받고 있다. 그렇다면 결과로 `40`이 나와야 할 것 같지만(4 bytes * 10개) ~~당연하게도~~ 포인터의 크기인 `8`이 출력된다. 이에 더해서, (컴파일러 설정에 따라 다르겠지만) 위 코드를 컴파일 하면 아래와 같은 경고 메시지를 확인할 수 있다.  
 > warning: 'sizeof' on array function parameter 'array' will return size of 'int *' [-Wsizeof-array-argument] return sizeof(array);
 
-`array의 이름`은 `array의 첫 번째 요소를 가리키는 포인터`이기 때문이다. `sizeof` operator는 단지 compile-time에 결정 가능한 값을 출력할 뿐이므로 해당 `array`가 선언 된 code block에서는 예상한 값을 얻을 수 있는 반면, 단순히 포인터가 전달 되는 매개 변수로서의 배열은 알 방법이 없다. 이는 아예 고정 크기 배열로서의 파라미터를 표현 하고자 한 `getSizeOfFixedArray()` 함수일지라도 마찬가지이다. `C`의 `main()` 함수의 시그니처를 생각해 보면 아래 세 가지가 가능한데,
+`array의 이름`은 `array의 첫 번째 요소를 가리키는 포인터`이기 때문이다. `sizeof` operator는 단지 compile-time에 결정 가능한 값을 출력할 뿐이므로 해당 `array`가 선언 된 code block에서는 예상한 값을 얻을 수 있는 반면, 단순히 포인터가 전달 되는 매개 변수로서의 배열은 알 방법이 없다. 이는 아예 고정 크기 배열로서의 파라미터를 표현 하고자 한 `getSizeOfFixedArray()` 함수일지라도 마찬가지이다. `함수`의 `매개 변수`로 전달 되는 배열은 크기를 적더라도 컴파일러에 의해 무시되고 포인터로 해석된다. `배열 포인터`는 어떨까. 결국 `배열을 가리키는 포인터`이므로 역시 포인터의 크기가 출력 될 뿐이다.  
+`C`의 `main()` 함수의 시그니처를 생각해 보면 아래 세 가지가 가능한데,
 ```c
 int main();
 int main(int argc, char** argv);
@@ -361,7 +364,27 @@ func main() {
 
 `Go`는 `func` 리터럴을 통해 `익명 함수`를 표현할수는 있지만 `람다 표현식`을 지원하지는 않는다. `Go`를 `functional programming languate(함수형 프로그래밍 언어`라고 구분하지 않는 이유인데, 이는 `Go`로 `함수형 프로그래밍` 이라는 패러다임을 구현할 수 있는가 와는 다른 문제이다. (위에서 살펴 보았듯 `Go`로도 `람다 함수`를 표현 할 수 있다)  
 
-`Java`는 `JDK1.8`에서 정식으로 `lambda expression`을 `지원`하고 있다. 기존 `자바` 문법에서는 모든 것이 `객체`로 표현 되어야 하고, `함수` 형태의 코드 블록을 다루기 위해서는 `클래스`를 생성 하고 해당 `클래스`에 포함 되는 `메서드` 형태가 필수라는 제약이 있었다. 따라서 `익명 함수` 자체가 구현 불가능한 내용 이었지만, `람다 표현식`이 언어에 정식으로 추가 됨으로 인해서 `함수` 형태로 다룰 수 있게 되었다. 하지만 `함수`를 나타내는 리터럴이 존재하지도 않고, 언어의 구현 스펙을 변경하지 않는 이상 `Java`에서는 `함수`를 
+`Java`는 `JDK1.8`에서 정식으로 `lambda expression`을 `지원`하고 있다. 기존 `자바` 문법에서는 모든 것이 `객체`로 표현 되어야 하고, `함수` 형태의 코드 블록을 다루기 위해서는 `클래스`를 생성 하고 해당 `클래스`에 포함 되는 `메서드` 형태가 필수라는 제약이 있었다. 즉 `함수`를 나타내는 리터럴이 존재하지도 않고, 언어의 구현 스펙을 변경하지 않는 이상 `Java`에서는 `익명 함수` 자체가 구현 불가능한 내용 이었지만, `람다 표현식`이 언어에 정식으로 추가 됨으로 인해서 `함수` 형태로 다룰 수 있게 되었다. 이를 위해 새로운 문법 혹은 타입을 추가하지 않고 하나의 `추상 메서드`를 가지는 `인터페이스`를 `람다 표현식`을 이용해 `람다 함수`와 매핑하는 구조를 마련하였다. 하나의 `추상 메서드`만을 가지는 `인터페이스`를 `함수형 인터페이스(functional interface)`라고 정의하고, `람다 표현식`을 이용해 이 `인터페이스`의 익명 구현체를 생성하여 전달 함으로써 `익명 함수`를 다룰 수 있게 한 것이다.  
+
+`클로저` 설명 시 사용 했던 `Java` 예제 코드를 `람다 표현식`을 사용하도록 변경 해보면 아래와 같다.
+```java
+public class Program {
+    @FunctionalInterface
+    public interface Addable {
+        public abstract int add(int number);
+    }
+    
+    public static void main(String[] args) {
+	int base = 5;
+	Addable adder = (int number) -> base + number;
+	
+	System.out.println("Adder with base 5 : " + adder.add(5));
+    }
+}
+
+// Adder with base 5 :  10
+```
+`Addable` interface에 `@FuntionalInterface`라는 `annotaion`이 붙어 있을 경우, 해당 인터페이스가 `람다 표현식`으로 매칭 가능한 인터페이스 인지, 즉 단일 추상 메서드만을 가진 인터페이스인지(물론 `디폴트 메서드`나 `정적 메서드`는 상관 없음)를 컴파일러가 체크해준다. 
 
 `Oracle`에서 제공하는 `Java` 스펙에서 지원하는 [`람다 표현식`의 예](https://docs.oracle.com/javase/specs/jls/se8/html/jls-15.html#jls-15.27)는 아래와 같다.
 ```java
