@@ -370,15 +370,20 @@ func main() {
 ```java
 public class Program {
     @FunctionalInterface
-    public interface Addable {
+    private interface Addable {
         public abstract int add(int number);
     }
     
+    private static Addable getAdderWithBase(int base) {
+        Addable adder = (int number) -> base + number;
+        
+        return adder;
+    } 
+    
     public static void main(String[] args) {
-	int base = 5;
-	Addable adder = (int number) -> base + number;
-	
-	System.out.println("Adder with base 5 : " + adder.add(5));
+    	Addable adder = getAdderWithBase(5);
+    	
+	    System.out.println("Adder with base 5 : " + adder.add(5));
     }
 }
 
