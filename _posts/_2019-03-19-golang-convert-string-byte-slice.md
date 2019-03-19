@@ -9,3 +9,8 @@ feature:
 date: 2019-03-19T21:31:50-04:00
 ---
 
+### Go에서 string이란?
+
+### []byte <--> string
+
+### Mutable, immutable
