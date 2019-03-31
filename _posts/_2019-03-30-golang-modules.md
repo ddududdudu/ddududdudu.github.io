@@ -22,8 +22,8 @@ module com.study.me/modules
 
 require (
   ...
-	cloud.google.com/go v0.34.0 // indirect
-	es.naverlabs.com/gopkg/echo.middlewares v0.0.0-20181205133126-5afc604ac666
+  cloud.google.com/go v0.34.0 // indirect
+  github.com/denisenkom/go-mssqldb v0.0.0-20181014144952-4e0d7dc8888f // indirect
   ...
   github.com/go-sql-driver/mysql v1.4.1
   ...
