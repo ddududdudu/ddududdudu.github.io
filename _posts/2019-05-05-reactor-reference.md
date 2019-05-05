@@ -197,37 +197,38 @@ onNext x 0..N [onErrpr | onComplete]
 
 ## Asynchronously to the Rescue?
 두번 째로 언급 했던 접근법인 `자원을 더욱 효율적으로 사용할 수 있는 방법을 찾는 것`이 자원 낭비 문제에 대한 해결책이 될 수 있습니다. `비동기/논블록킹`으로 코드를 작성함으로써, 다른 활성화 된 태스크로 동일한 자원을 사용하여 실행을 전환 시키고 비동기적인 처리가 완료 되면 현재 프로세스로 되돌아올 수 있습니다.  
-그렇다면 어떻게 `JVM` 상에서 비동기적인 코드를 작성할 수 있을까요? `Java`는 비동기 프로그래밍을 위한 두 가지 모델을 제공하고 있습니다:  
+그렇다면 어떻게 `JVM` 상에서 비동기적인 코드를 작성할 수 있을까요? `Java`는 비동기 프로그래밍을 위한 두 가지 모델을 제공하고 있습니다:
 - Callbacks: 비동기적인 메서드가 리턴 값을 가지지 않고 대신 `lambda` 혹은 `anonymous class` 형태의 추가적인 `callback` 파라미터를 가집니다. 이 callback은 결과 값이 가용한 경우 호출 됩니다. 이에 대한 잘 알려진 예로 `Swing`의 `EventListener` 계층 구조가 있습니다.  
 - Futures: 비동기 메서드가 즉시 `Future<T>`를 리턴합니다. 비동기 프로세스가 T 값을 계산하고, 대신 `Future` 객체가 이를 감싸게 됩니다. 즉시 값이 가용하지 않으면 `Future`객체를 통해 값이 유효할 때 까지 polling 할 수 있습니다. 그 예로, `Future` 오브젝트를 이용한 `Callable<T>` 태스크를 실행하는 `ExecutorService`가 있습니다.
   
 이러한 방법들로 충분할까요? 이러한 접근들이 모든 유즈 케이스에 대해 충분한 것은 아니며, 두 방법 모두 제약사항을 가지고 있습니다.  
+
 `Callback`은 함께 조합하기 어려우며, 코드 가독성과 유지보수성을 빠르게 떨어뜨립니다. (콜백 지옥으로 알려진)  
 
-다음 예제를 통해 생각해봅시다: 사용자 UI로부터 상위 다섯개의 즐겨찾기를 표시하고, 존재하지 않는 경우에는 제안 사항을 표시합니다. 이것은 세 개의 서비스(즐겨찾기 ID 제공 / 즐겨찾기 상세 내용 제공 / 제안 사항에 대한 상세 내용 제공)를 통해 이루어 집니다.
+다음 예제를 통해 생각해봅시다: 사용자 UI로부터 상위 다섯개의 즐겨찾기를 표시하고, 존재하지 않는 경우에는 제안 사항을 표시합니다. 이것은 세 개의 서비스(1. 즐겨찾기 ID 제공, 2. 즐겨찾기 상세 내용 제공, 3. 제안 사항에 대한 상세 내용 제공)를 통해 이루어 집니다.
 
 *Example of Callback Hell*
 ```java
-userService.getFavorites(userId, new Callback<List<String>>() {                  {1}
-  public void onSuccess(List<String> list) {                                     {2}
-    if (list.isEmpty()) {                                                        {3}
+userService.getFavorites(userId, new Callback<List<String>>() {            {1}
+  public void onSuccess(List<String> list) {                               {2}
+    if (list.isEmpty()) {                                                  {3}
       suggestionService.getSuggestions(new Callback<List<Favorite>>() {
-        public void onSuccess(List<Favorite> list) {                             {4}
-          UiUtils.submitOnUiThread(() -> {                                       {5}
+        public void onSuccess(List<Favorite> list) {                       {4}
+          UiUtils.submitOnUiThread(() -> {                                 {5}
             list.stream()
                 .limit(5)
-                .forEach(uiList::show);                                          {6}
+                .forEach(uiList::show);                                    {6}
             });
         }
 
-        public void onError(Throwable error) {                                   {7}
+        public void onError(Throwable error) {                             {7}
           UiUtils.errorPopup(error);
         }
       });
     } else {
-      list.stream()                                                              {8}
+      list.stream()                                                        {8}
           .limit(5)
-          .forEach(favId -> favoriteService.getDetails(favId,                    {9}
+          .forEach(favId -> favoriteService.getDetails(favId,              {9}
             new Callback<Favorite>() {
               public void onSuccess(Favorite details) {
                 UiUtils.submitOnUiThread(() -> uiList.show(details));
@@ -248,4 +249,32 @@ userService.getFavorites(userId, new Callback<List<String>>() {                 
 ```
 
 {1} Callback 기반의 서비스: 비동기 실행이 성공하였을 때에 대한 메서드와 에러 케이스에 대한 메서드를 가지는 `Callback` interfase.
-{2} 첫 번째 서비스 호출
+{2} 첫 번째 서비스가 즐겨찾기 ID리스트로 콜백을 호출합니다.
+{3} 만약 리스트가 비어 있을 경우, `suggestionService`를 호출해야 합니다.
+{4} `suggestionService`는 두 번째 콜백에 `List<Favorite>`를 제공합니다.
+{5} 우리가 `UI`를 다루고 있기 때문에, 데이터를 소비하는 코드가 `UI thread`에서 동작함을 보장해야 합니다.
+{6} 제안 사항의 수를 다섯 개로 제한하기 위해 Java 8 Stream을 사용하고, UI에 가시적인 리스트로 표현합니다.
+{7} 각 단계에서 에러는 같은 방법으로 핸들링합니다: 팝업 띄우기
+{8} 즐겨찾기 ID 단계로 돌아가서, 만약 서비스가 전체 리스트를 리턴한 경우 `Favorite` 객체의 상세 정보를 획득하기 위해 `favoriteService`로 가야 합니다. 우리는 단지 다섯 개의 결과만을 원하기 때문에 우선 리스트의 스트림을 다섯 개로 제한합니다.
+{9} 또, 콜백입니다. 이번에는 UI 쓰레드의 UI에 푸시하기 위한 모든 정보를 가진 `Favorite` 객체를 얻습니다.  
+  
+상당한 양의 코드입니다. 이러한 코드는 따라가기도 어렵고 반복되는 코드가 존재합니다. `Reactor`를 이용한 동일한 동작의 코드를 봅시다.
+*Example of Reactor code equivalent to callback code*
+```java
+userService.getFavorites(userId)                               {1}
+           .flatMap(favoriteService::getDetails)               {2}
+           .switchIfEmpty(suggestionService.getSuggestions())  {3}
+           .take(5)                                            {4}
+           .publishOn(UiUtils.uiThreadScheduler())             {5}
+           .subscribe(uiList::show, UiUtils::errorPopup);      {6}
+```
+{1} 즐겨찾기 ID의 flow로 시작합니다.
+{2} 즐겨찾기 ID를 자세한 `Favorite` 객체로 비동기적인 변환(flatMap)을 시도합니다. 이제 `Favorite`의 flow를 가집니다.
+{3} `Favorite` flow가 비어있는 경우, `suggestionService`를 통한 fallback으로 전환합니다.
+{4} 오직 최대 다섯 개의 결과에만 관심이 있습니다.
+{5} 최종적으로 각각의 데이터 조각이 `UI thread`에서 처리 되기를 원합니다.
+{6} 데이터의 최종형태를 위해 해야하는 것과 에러 케이스일 때 해야 하는것에 대해 정의 함으로써 이 flow를 트리거링합니다.
+
+
+
+
