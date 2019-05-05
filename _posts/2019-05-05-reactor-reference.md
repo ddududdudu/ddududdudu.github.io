@@ -161,5 +161,14 @@ repositories {
 
 `Reactive programming`을 향한 첫 걸음으로써, `Microsoft`는 `.NET` 생태계에 `Reactive Extensions`(Rx) 라이브러리를 만들었습니다. 그리고 `RxJava`는 `JVM` 상의 `reactive programming`을 위해 구현 되었습니다. 시간이 흐르면서, `JVM` 상에서 `reacive library`에 대한 인터페이스와 상호작용에 대한 일련의 규격을 정의하는 `Reactive Streams`라는 노력을 통해 자바 표준화로 나타나게 되었습니다. 이 인터페이스는 Java 9의 `Flow` 클래스 아래로 통합 되었습니다.  
   
-`Reactive Programming` 패러다임은 종종 객체 지향 언어에서 `Observer deisgn pattern`의 확장으로서 표현되곤 합니다. 이러한 모든 라이브러리의 `iterable-iterator` 쌍에 대한 이중성이 있으므로, 친숙한 `iterator pattern`과 `main reactive pattern`을 비교할 수 있습니다. 이들 간에 가장 주요한 차이점은, `iterator`는 `pull-based`로 동작하는 반면 `reactive streams`는 `push-based`로 동작한다는 점입니다.  
+`Reactive Programming` 패러다임은 종종 객체 지향 언어에서 `Observer deisgn pattern`의 확장으로서 표현되곤 합니다. 이러한 모든 라이브러리의 `Iterable-Iterator` 쌍에 대한 이중성이 있으므로, 친숙한 `Iterator pattern`과 `main Reactive Pattern`을 비교할 수 있습니다. 이들 간에 가장 주요한 차이점은, `Iterator`는 `pull-based`로 동작하는 반면 `Reactive Streams`는 `push-based`로 동작한다는 점입니다.  
   
+`Iterator`를 사용하는 것은 값에 접근하는 방법이 전적으로 `Iterable`에게 달려있음에도 불구하고 명령형(imperative) 프로그래밍 패턴입니다. 순서적으로 
+언제 `next()` 아이템에 접근할지를 결정하는 것은 전적으로 개발제의 몫입니다. `Reactive Streams`에서는 `Iteratable-Iterator` 쌍에 대응하는 `Publisher-Subscriber` 쌍이 존재합니다. 그러나 `Subscriber`에게 새로운 값이 발생했을 때 그것이 가용함을 알리는 것은 `Publisher`이며, 이러한 `push` 관점이 `reactive` 하기 위한 열쇠입니다. 또한 푸시 되는 값들에 대해 적용된 동작들이 명령형 프로그래밍에 비해 명시적으로 표현됩니다. 프로그래머는 정확한 제어 흐름을 나타내는 대신 계산 논리를 표현할 수 있습니다. 
+
+
+
+
+
+
+
