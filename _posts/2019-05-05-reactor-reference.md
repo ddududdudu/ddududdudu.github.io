@@ -59,7 +59,7 @@ date: 2019-05-05T21:31:50-04:00
 
 ### 2.4.1 Maven Installation
 `BOM`의 개념은 기본적으로 `Maven` 지원에 의한 것입니다. 우선, 아래 코드 조각을 당신의 `pom.xml`에 추가함으로써 `BOM`을 import 해야 합니다. 만약 최상위 섹션인 `dependencyManagement`가 이미 당신의 `pom.xml`에 존재한다면 `contents`만 추가하면 됩니다.
-```maven
+```xml
 <dependencyManagement> {1}
     <dependencies>
         <dependency>
@@ -75,7 +75,7 @@ date: 2019-05-05T21:31:50-04:00
 {1} `dependencyManagement` 태그를 주의하세요. 이 태그는 기존의 `dependencies` 섹션에 추가 됩니다.  
 
 다음으로, 적절한 `Reactor` 프로젝트의 의존성을 추가하세요. 보통의 경우 아래와 같이 <version> 태그를 제외합니다.
-```maven
+```xml
 <dependencies>
     <dependency>
         <groupId>io.projectreactor</groupId>
@@ -92,6 +92,7 @@ date: 2019-05-05T21:31:50-04:00
 {1} 코어 라이브러리 의존성.
 {2} 버전 태그가 존재하지 않습니다.
 {3} `reactor-test`는 `reactive streamse`에 대한 유닛 테스트 기반을 제공합니다.
+
 ### 2.4.2 Gradle Installation
 `Gradle`은 `Maven BOM`에 대한 코어 지원이 없지만, `Spring`의 `gradle-dependency-management` 플러그인을 사용할 수 있습니다.  
 우선, `Gradle Plugin Portal`에 플러그인을 적용하세요.
@@ -116,3 +117,39 @@ dependencies {
 }
 ```
 {1} 세 번째(버전) 부분이 없음 : 버전을 위한 부분으로, `BOM`에서 값을 취하게 됨.
+
+### 2.4.3 Milestones and Snapshots
+마일스톤과 개발자 프리뷰들은 `Maven Central` 보다는 `Spring Milestones` repository를 통해 배포 됩니다. 빌드 설정 파일에 추가 하기 위해, 아래 코드 조각을 사용하세요.
+```xml
+<repositories>
+	<repository>
+		<id>spring-milestones</id>
+		<name>Spring Milestones Repository</name>
+		<url>https://repo.spring.io/milestone</url>
+	</repository>
+</repositories>
+```
+`Gradle`의 경우 아래 코드 조각을 사용하면 됩니다.
+```gradle
+repositories {
+  maven { url 'https://repo.spring.io/milestone' }
+  mavenCentral()
+}
+```
+이와 유사하게, 별도의 지정된 레파지토리에 존재하는 스냅샷의 경우 아래와 같이 적용할 수 있습니다.
+```xml
+<repositories>
+	<repository>
+		<id>spring-snapshots</id>
+		<name>Spring Snapshot Repository</name>
+		<url>https://repo.spring.io/snapshot</url>
+	</repository>
+</repositories>
+```
+
+```gradle
+repositories {
+  maven { url 'https://repo.spring.io/snapshot' }
+  mavenCentral()
+}
+```
