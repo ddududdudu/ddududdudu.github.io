@@ -30,4 +30,31 @@
 > Aluminium-SR1
 > Bismuth-RELEASE
 > Californium-SR32
-코드네임은 전통적인 MAJOR.MINOR 번호로 표현됩니다. 그들은 알파벳순으로 증가하는 
+코드네임은 전통적인 MAJOR.MINOR 번호로 표현됩니다. 그들은 알파벳순으로 증가하는 [주기율표](https://en.wikipedia.org/wiki/Periodic_table#Overview)에서 따왔습니다.  
+한정자들은 시기 순으로 아래와 같습니다.
+> BUILD-SNAPSHOT
+> M1..N: 마일스톤 혹은 개발자 프리뷰
+> RELEASE: 해당 코드네임 시리즈의 첫 GA(General Available) 릴리즈
+> SR1..N: 해당 코드네임 시리즈의 다음 GA 릴리즈로 Service Release를 나타내고 PATCH number와 동일함
+
+## 2.4 Getting Reactor
+초기에 언급 했던 것 처럼, `Reactor`를 사용하는 가장 쉬운 방법은 `BOM`을 사용하고 프로젝트에 상응하는 의존성을 추가하는 것입니다. 그러한 의존성을 추가할 때, 반드시 버전을 생략함으로써 BOM으로부터 버전을 획득할 수 있도록 해야 함을 주의합니다.  
+만약 아티팩트의 특정 버전을 강제하고 싶은 경우에는 버전명을 설정할 수 있숩니다. 또한 `BOM` 사용을 포기하고 전체 의존성에 아티팩트 버전을 명시할 수도 있습니다.
+
+### 2.4.1 Maven Installation
+`BOM`의 개념은 기본적으로 `Maven` 지원에 의한 것입니다. 우선, 아래 코드 조각을 당신의 `pom.xml`에 추가함으로써 `BOM`을 import 해야 합니다. 만약 최상위 섹션인 `dependencyManagement`가 이미 당신의 `pom.xml`에 존재한다면 `contents`만 추가하면 됩니다.
+```maven
+<dependencyManagement> {1}
+    <dependencies>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-bom</artifactId>
+            <version>Bismuth-RELEASE</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+{1} `dependencyManagement` 태그를 주의하세요. 이 태그는 기존의 `dependencies` 섹션에 추가 됩니다.  
+다음으로, 
