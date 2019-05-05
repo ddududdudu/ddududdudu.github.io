@@ -248,15 +248,15 @@ userService.getFavorites(userId, new Callback<List<String>>() {            {1}
 });
 ```
 
-{1} Callback 기반의 서비스: 비동기 실행이 성공하였을 때에 대한 메서드와 에러 케이스에 대한 메서드를 가지는 `Callback` interfase.
-{2} 첫 번째 서비스가 즐겨찾기 ID리스트로 콜백을 호출합니다.
-{3} 만약 리스트가 비어 있을 경우, `suggestionService`를 호출해야 합니다.
-{4} `suggestionService`는 두 번째 콜백에 `List<Favorite>`를 제공합니다.
-{5} 우리가 `UI`를 다루고 있기 때문에, 데이터를 소비하는 코드가 `UI thread`에서 동작함을 보장해야 합니다.
-{6} 제안 사항의 수를 다섯 개로 제한하기 위해 Java 8 Stream을 사용하고, UI에 가시적인 리스트로 표현합니다.
-{7} 각 단계에서 에러는 같은 방법으로 핸들링합니다: 팝업 띄우기
-{8} 즐겨찾기 ID 단계로 돌아가서, 만약 서비스가 전체 리스트를 리턴한 경우 `Favorite` 객체의 상세 정보를 획득하기 위해 `favoriteService`로 가야 합니다. 우리는 단지 다섯 개의 결과만을 원하기 때문에 우선 리스트의 스트림을 다섯 개로 제한합니다.
-{9} 또, 콜백입니다. 이번에는 UI 쓰레드의 UI에 푸시하기 위한 모든 정보를 가진 `Favorite` 객체를 얻습니다.  
+{1} Callback 기반의 서비스: 비동기 실행이 성공하였을 때에 대한 메서드와 에러 케이스에 대한 메서드를 가지는 `Callback` interfase.  
+{2} 첫 번째 서비스가 즐겨찾기 ID리스트로 콜백을 호출합니다.  
+{3} 만약 리스트가 비어 있을 경우, `suggestionService`를 호출해야 합니다.  
+{4} `suggestionService`는 두 번째 콜백에 `List<Favorite>`를 제공합니다.  
+{5} 우리가 `UI`를 다루고 있기 때문에, 데이터를 소비하는 코드가 `UI thread`에서 동작함을 보장해야 합니다.  
+{6} 제안 사항의 수를 다섯 개로 제한하기 위해 Java 8 Stream을 사용하고, UI에 가시적인 리스트로 표현합니다.  
+{7} 각 단계에서 에러는 같은 방법으로 핸들링합니다: 팝업 띄우기  
+{8} 즐겨찾기 ID 단계로 돌아가서, 만약 서비스가 전체 리스트를 리턴한 경우 `Favorite` 객체의 상세 정보를 획득하기 위해 `favoriteService`로 가야 합니다. 우리는 단지 다섯 개의 결과만을 원하기 때문에 우선 리스트의 스트림을 다섯 개로 제한합니다.  
+{9} 또, 콜백입니다. 이번에는 UI 쓰레드의 UI에 푸시하기 위한 모든 정보를 가진 `Favorite` 객체를 얻습니다.    
   
 상당한 양의 코드입니다. 이러한 코드는 따라가기도 어렵고 반복되는 코드가 존재합니다. `Reactor`를 이용한 동일한 동작의 코드를 봅시다.
 *Example of Reactor code equivalent to callback code*
@@ -268,13 +268,29 @@ userService.getFavorites(userId)                               {1}
            .publishOn(UiUtils.uiThreadScheduler())             {5}
            .subscribe(uiList::show, UiUtils::errorPopup);      {6}
 ```
-{1} 즐겨찾기 ID의 flow로 시작합니다.
-{2} 즐겨찾기 ID를 자세한 `Favorite` 객체로 비동기적인 변환(flatMap)을 시도합니다. 이제 `Favorite`의 flow를 가집니다.
-{3} `Favorite` flow가 비어있는 경우, `suggestionService`를 통한 fallback으로 전환합니다.
-{4} 오직 최대 다섯 개의 결과에만 관심이 있습니다.
-{5} 최종적으로 각각의 데이터 조각이 `UI thread`에서 처리 되기를 원합니다.
-{6} 데이터의 최종형태를 위해 해야하는 것과 에러 케이스일 때 해야 하는것에 대해 정의 함으로써 이 flow를 트리거링합니다.
+{1} 즐겨찾기 ID의 flow로 시작합니다.  
+{2} 즐겨찾기 ID를 자세한 `Favorite` 객체로 비동기적인 변환(flatMap)을 시도합니다. 이제 `Favorite`의 flow를 가집니다.  
+{3} `Favorite` flow가 비어있는 경우, `suggestionService`를 통한 fallback으로 전환합니다.  
+{4} 오직 최대 다섯 개의 결과에만 관심이 있습니다.  
+{5} 최종적으로 각각의 데이터 조각이 `UI thread`에서 처리 되기를 원합니다.  
+{6} 데이터의 최종형태를 위해 해야하는 것과 에러 케이스일 때 해야 하는것에 대해 정의 함으로써 이 flow를 트리거링합니다.  
+  
+즐겨찾기 ID가 800ms 미만에서만 검색 되도록 하고, 처리 시간이 초과되는 경우 cache에서 가져오도록 하려면 어떻게 해야할까요? Callback 기반으로는 복잡한 작업이지만, `Reactor`를 이용하면 method chain에 timeout operator를 추가하는 것 처럼 쉽게 할 수 있습니다.
 
+*Example of Reactor code with timeout and fallback*
+```java
+userService.getFavorites(userId)
+           .timeout(Duration.ofMillis(800))                          {1}
+           .onErrorResume(cacheService.cachedFavoritesFor(userId))   {2}
+           .flatMap(favoriteService::getDetails)                     {3}
+           .switchIfEmpty(suggestionService.getSuggestions())
+           .take(5)
+           .publishOn(UiUtils.uiThreadScheduler())
+           .subscribe(uiList::show, UiUtils::errorPopup);
+```
+{1} 윗 부분(userService.getFavorite())에서 800ms 동안 아무런 아웃풋이 없을 경우 에러를 전파합니다.  
+{2} 에러 케이스인 경우, `cacheService`로 fall back 합니다.  
+{3} 이후의 method chain은 이전 예제와 유사합니다.  
 
-
+`Future`는 `Callback`에 비해 꽤 낫지만, `CompletableFuture`에 의해 Java 8에서 개선 되었음에도 불구하고 여전히 잘 구성하기 어렵습니다. 여러 `Future`를 함께 운용하는 것은 가능하지만 쉽지 않습니다. 또한, `Future`는 다른 문제점을 가지고 있습니다. 
 
