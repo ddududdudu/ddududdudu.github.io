@@ -189,7 +189,7 @@ onNext x 0..N [onErrpr | onComplete]
 1. paralleize(병렬화): 더 많은 쓰레드와 하드웨어 리소스를 사용합니다.
 2. 현재의 자원을 더욱 효율적으로 사용할 수 있는 방법을 찾습니다.
 
-보통, Java 개발자들은 blocking code를 통해 프로그래밍합니다. 이는 성능에 대한 병목현상이 있기 전 까지는 별 문제가 되지 않을 것이며, 이 지점에서 추가적인 쓰레레드가 고려됩니다. 그러나 자원 활용성의 이러한 확장은 경합과 동싱성 문제들을 빠르게 초래하게 됩니다.  
+보통, Java 개발자들은 blocking code를 통해 프로그래밍합니다. 이는 성능에 대한 병목현상이 있기 전 까지는 별 문제가 되지 않을 것이며, 이 지점에서 추가적인 쓰레드가 고려됩니다. 그러나 자원 활용성의 이러한 확장은 경합과 동싱성 문제들을 빠르게 초래하게 됩니다.  
   
 여전히 나쁜 것은, 블록킹 코드가 리소스를 낭비한다는 것입니다. 더욱 자세히 들여다 보면, 프로그램에 D/B에 대한 요청이나 network 호출과 같은 I/O로 인한 동작 지연이 포함 되는 경우, 하나 혹은 그 이상의 쓰레드가 데이터를 기다리기 위해 idle 상태로 전환 되게 되면서 리소스가 낭비 되게 됩니다.  
   
@@ -248,7 +248,7 @@ userService.getFavorites(userId, new Callback<List<String>>() {            {1}
 });
 ```
 
-{1} Callback 기반의 서비스: 비동기 실행이 성공하였을 때에 대한 메서드와 에러 케이스에 대한 메서드를 가지는 `Callback` interfase.  
+{1} Callback 기반의 서비스: 비동기 실행이 성공하였을 때에 대한 메서드와 에러 케이스에 대한 메서드를 가지는 `Callback` interface.  
 {2} 첫 번째 서비스가 즐겨찾기 ID리스트로 콜백을 호출합니다.  
 {3} 만약 리스트가 비어 있을 경우, `suggestionService`를 호출해야 합니다.  
 {4} `suggestionService`는 두 번째 콜백에 `List<Favorite>`를 제공합니다.  
@@ -324,8 +324,49 @@ assertThat(results).contains(
 		"Name NameABSLAJNFOAJNFOANFANSF has stats 121");
 ```
 {1} 처리해야 할 ID list를 제공하는 `Future`로 시작합니다.  
-{2} 
+{2} 일단 목록을 얻게 되면 좀 더 깊은 단계의 비동기적인 처리를 시작합니다.  
+{3} 리스트의 각 요소에 대해:  
+{4} 비동기적으로 관련된 이름을 획득합니다.  
+{5} 비동기적으로 관련된 통계를 획득합니다.  
+{6} 두 `CompletableFuture`의 결과를 조합합니다.  
+{7} 이제 모든 조합 작업을 나타내는 `Future`의 리스트를 가집니다. 이러한 작업을 수행하기 위해 리스트를 배열로 변환합니다.  
+{8} 모든 태스크들이 완료 되었을 때 완료 `Future`를 아웃풋으로 가지는 `CompletableFuture.allOf()`로 배열을 전달합니다.  
+{9} `allOf()`가 `CompletableFuture<Void>`를 리턴하기 때문에, join()을 통한 결과 수집을 하기 위해 `Future`의 리스트를 다시 반복 해야합니다. `allOf()`가 모든 `Future`가 이루어지는 것을 보장하기 때문에 여기서 블록 되지는 않습니다.  
+{10} 일단 모든 비동기 파이프라인이 트리거 되면, 이것이 처리되는 것을 기다리고 우리가 `assertion`할 수 있도록 결과의 리스트를 리턴합니다.  
 
+`Reactor`가 더 많은 조합 연산자들을 기본적으로 가지고 있기 때문에, 전체적인 과정이 더욱 단순해집니다.
+*Example of Reactor code equivalent to future code*
+```java
+Flux<String> ids = ifhrIds();                                                                    {1}
 
+Flux<String> combinations =
+		ids.flatMap(id -> {                                                              {2}
+			Mono<String> nameTask = ifhrName(id);                                    {3}
+			Mono<Integer> statTask = ifhrStat(id);                                   {4}
+ 
+     			return nameTask.zipWith(statTask,                                        {5}
+					(name, stat) -> "Name " + name + " has stats " + stat);
+		});
 
+Mono<List<String>> result = combinations.collectList();                                          {6}
+
+List<String> results = result.block();                                                           {7}
+assertThat(results).containsExactly(                                                             {8}
+		"Name NameJoe has stats 103",
+		"Name NameBart has stats 104",
+		"Name NameHenry has stats 105",
+		"Name NameNicole has stats 106",
+		"Name NameABSLAJNFOAJNFOANFANSF has stats 121"
+);
+```
+{1} 이번에는 비동기적으로 제공되는 sequence인 `Flux<String>`으로 시작합니다.  
+{2} Sequence의 각 요소에 대해 비동기적으로 두 번 처리합니다. (`flatMap()`을 호출하는 함수 내부에서)  
+{3} 관련 이름을 획득합니다.  
+{4} 관련 통계를 획득합니다.  
+{5} 비동기적으로 두 값을 조합합니다.  
+{6} 값이 가용하면 리스트로 값을 집계합니다.  
+{7} 상용화 단계라면 `Flux`를 더 많이 결합하거나 구독함으로써 비동기식으로 작업할 것입니다. 대부분의 경우 `Mono`를 결과로 리턴하게 됩니다. 지금은 테스트이기 때문에, 블록 시키고 처리가 완료 되기를 기다린 후 집계 된 값의 리스트를 직접 반환합니다.  
+{8} 결과를 확인합니다.  
+
+`Callback`과 `Future`의 비슷한 위험서을 가지며, 이것이 `Reactive Programming`이 `Publisher-Subscriber` 쌍과 함께 해결하고자 하는 부분입니다.
 
