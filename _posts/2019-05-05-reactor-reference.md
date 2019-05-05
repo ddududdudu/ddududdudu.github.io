@@ -73,4 +73,46 @@ date: 2019-05-05T21:31:50-04:00
 </dependencyManagement>
 ```
 {1} `dependencyManagement` 태그를 주의하세요. 이 태그는 기존의 `dependencies` 섹션에 추가 됩니다.  
-다음으로, 
+
+다음으로, 적절한 `Reactor` 프로젝트의 의존성을 추가하세요. 보통의 경우 아래와 같이 <version> 태그를 제외합니다.
+```maven
+<dependencies>
+    <dependency>
+        <groupId>io.projectreactor</groupId>
+        <artifactId>reactor-core</artifactId> {1}
+        {2}
+    </dependency>
+    <dependency>
+        <groupId>io.projectreactor</groupId>
+        <artifactId>reactor-test</artifactId> {3}
+        <scope>test</scope>
+    </dependency>
+</dependencies> 
+```
+{1} 코어 라이브러리 의존성.
+{2} 버전 태그가 존재하지 않습니다.
+{3} `reactor-test`는 `reactive streamse`에 대한 유닛 테스트 기반을 제공합니다.
+### 2.4.2 Gradle Installation
+`Gradle`은 `Maven BOM`에 대한 코어 지원이 없지만, `Spring`의 `gradle-dependency-management` 플러그인을 사용할 수 있습니다.  
+우선, `Gradle Plugin Portal`에 플러그인을 적용하세요.
+```gradle
+plugins {
+    id "io.spring.dependency-management" version "1.0.6.RELEASE" {1}
+} 
+```
+{1} 기술했던 것과 같이, `1.0.6 RELEASE`는 플러그인의 최신 버전입니다. 업데이트를 확인 하세요.  
+그리고 `BOM`을 import 하기 위해 아래 항목을 추가하세요.
+```gradle
+dependencyManagement {
+     imports {
+          mavenBom "io.projectreactor:reactor-bom:Bismuth-RELEASE"
+     }
+}
+```
+마지막으로 버전 넘버 명시 없이 의존성을 추가하면 됩니다.
+```gradle
+dependencies {
+     compile 'io.projectreactor:reactor-core' {1}
+}
+```
+{1} 세 번째(버전) 부분이 없음 : 버전을 위한 부분으로, `BOM`에서 값을 취하게 됨.
