@@ -89,9 +89,9 @@ date: 2019-05-05T21:31:50-04:00
     </dependency>
 </dependencies> 
 ```
-{1} 코어 라이브러리 의존성.
-{2} 버전 태그가 존재하지 않습니다.
-{3} `reactor-test`는 `reactive streamse`에 대한 유닛 테스트 기반을 제공합니다.
+{1} 코어 라이브러리 의존성.  
+{2} 버전 태그가 존재하지 않습니다.  
+{3} `reactor-test`는 `reactive streamse`에 대한 유닛 테스트 기반을 제공합니다.  
 
 ### Gradle Installation
 `Gradle`은 `Maven BOM`에 대한 코어 지원이 없지만, `Spring`의 `gradle-dependency-management` 플러그인을 사용할 수 있습니다.  
@@ -292,5 +292,40 @@ userService.getFavorites(userId)
 {2} 에러 케이스인 경우, `cacheService`로 fall back 합니다.  
 {3} 이후의 method chain은 이전 예제와 유사합니다.  
 
-`Future`는 `Callback`에 비해 꽤 낫지만, `CompletableFuture`에 의해 Java 8에서 개선 되었음에도 불구하고 여전히 잘 구성하기 어렵습니다. 여러 `Future`를 함께 운용하는 것은 가능하지만 쉽지 않습니다. 또한, `Future`는 다른 문제점을 가지고 있습니다. 
+`Future`는 `Callback`에 비해 꽤 낫지만, `CompletableFuture`에 의해 Java 8에서 개선 되었음에도 불구하고 여전히 잘 구성하기 어렵습니다. 여러 `Future`를 함께 운용하는 것은 가능하지만 쉽지 않습니다. 또한, `Future`는 다른 문제점을 가지고 있습니다. `Future`는 `get()` 메서드 호출로 인한 또 다른 블로킹 상황을 초래하기 쉬우며, 느린 수행(lazy-computation)을 지원하지 않고, 다중 값들 또는 에러들에 대한 지원이 부족합니다.  
+또 다른 예제를 봅시다: 우리는 이름과 통계 정보 쌍을 조합하기 원하는 ID의 리스트를 얻고, 모든 것은 비동기적으로 이루어집니다.
+*Example of `CompletableFuture` combination*
+```java
+CompletableFuture<List<String>> ids = ifhIds();                                              {1}
+
+CompletableFuture<List<String>> result = ids.thenComposeAsync(l -> {                         {2}
+	Stream<CompletableFuture<String>> zip =                
+			l.stream().map(i -> {                                                {3}
+				CompletableFuture<String> nameTask = ifhName(i);             {4}
+				CompletableFuture<Integer> statTask = ifhStat(i);            {5}
+
+				return nameTask.thenCombineAsync(statTask, (name, stat) -> "Name " + name + " has stats " + stat);   {6}
+			});                                                                 
+	List<CompletableFuture<String>> combinationList = zip.collect(Collectors.toList());  {7}
+	CompletableFuture<String>[] combinationArray = combinationList.toArray(new CompletableFuture[combinationList.size()]);
+
+	CompletableFuture<Void> allDone = CompletableFuture.allOf(combinationArray);         {8}
+	return allDone.thenApply(v -> combinationList.stream()
+			.map(CompletableFuture::join)                                        {9}
+			.collect(Collectors.toList()));
+});
+
+List<String> results = result.join();                                                        {10}
+assertThat(results).contains(
+		"Name NameJoe has stats 103",
+		"Name NameBart has stats 104",
+		"Name NameHenry has stats 105",
+		"Name NameNicole has stats 106",
+		"Name NameABSLAJNFOAJNFOANFANSF has stats 121");
+```
+{1} 처리해야 할 ID list를 제공하는 `Future`로 시작합니다.  
+{2} 
+
+
+
 
