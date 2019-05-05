@@ -153,3 +153,11 @@ repositories {
   mavenCentral()
 }
 ```
+
+# 3. Introduction to Reactive Programming
+`Reactor`는 `Reactive Programming` 패러다임의 구현체이며, `reactive programming`은 아래와 같이 요약할 수 있습니다.
+> Reactive programming은 데이터 스트림과 변화의 전파와 관련된 비동기 프로그래밍(asynchrounous programming) 패러다임입니다. 이는 채택한 프로그래밍 언어를 이용해 정적이거나(ex. 배열) 동적인(ex. event emitter) 데이터 스트림을 쉽게 표현할 수 있음을 의미합니다.  
+> — https://en.wikipedia.org/wiki/Reactive_programming
+
+`Reactive programming`을 향한 첫 걸음으로써, `Microsoft`는 `.NET` 생태계에 `Reactive Extensions`(Rx) 라이브러리를 만들었습니다. 그리고 `RxJava`는 `JVM` 상의 `reactive programming`을 위해 구현 되었습니다. 시간이 흐른 뒤, 자바 표준은 `Reactive Streams`를 통해
+```gradle
