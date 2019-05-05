@@ -36,14 +36,17 @@ date: 2019-05-05T21:31:50-04:00
 
 ## 2.3 Understanding the BOM
 `Reactor 3`는 `reactor-core 3.0.4` `Aluminium` 릴리즈들 이후로부터 `BOM` 모델을 사용하고 있습니다. 이 나열된 리스트 그룹의 아티팩트들은 함께 잘 동작함을 의미하며, 각각의 아티팩트들에 별도의 버전 관리 체계가 존재하더라도 관련된 버전을 제공합니다.  
-`BOM`(Bill of Materials)는 그 자체로 버전 관리되며, 한정자(qualifier) 뒤에 코드네임이 따라오는 release train scheme을 사용합니다. 아래는 몇 가지 예입니다.  
+`BOM`(Bill of Materials)는 그 자체로 버전 관리되며, 한정자(qualifier) 뒤에 코드네임이 따라오는 release train scheme을 사용합니다. 아래는 몇 가지 예입니다.
+
 > Aluminium-RELEASE
 > Californium-BUILD-SNAPSHOT
 > Aluminium-SR1
 > Bismuth-RELEASE
 > Californium-SR32
+
 코드네임은 전통적인 MAJOR.MINOR 번호로 표현됩니다. 그들은 알파벳순으로 증가하는 [주기율표](https://en.wikipedia.org/wiki/Periodic_table#Overview)에서 따왔습니다.  
 한정자들은 시기 순으로 아래와 같습니다.
+
 > BUILD-SNAPSHOT
 > M1..N: 마일스톤 혹은 개발자 프리뷰
 > RELEASE: 해당 코드네임 시리즈의 첫 GA(General Available) 릴리즈
