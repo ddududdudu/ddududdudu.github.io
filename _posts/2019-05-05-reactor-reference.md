@@ -164,7 +164,18 @@ repositories {
 `Reactive Programming` 패러다임은 종종 객체 지향 언어에서 `Observer deisgn pattern`의 확장으로서 표현되곤 합니다. 이러한 모든 라이브러리의 `Iterable-Iterator` 쌍에 대한 이중성이 있으므로, 친숙한 `Iterator pattern`과 `main Reactive Pattern`을 비교할 수 있습니다. 이들 간에 가장 주요한 차이점은, `Iterator`는 `pull-based`로 동작하는 반면 `Reactive Streams`는 `push-based`로 동작한다는 점입니다.  
   
 `Iterator`를 사용하는 것은 값에 접근하는 방법이 전적으로 `Iterable`에게 달려있음에도 불구하고 명령형(imperative) 프로그래밍 패턴입니다. 순서적으로 
-언제 `next()` 아이템에 접근할지를 결정하는 것은 전적으로 개발제의 몫입니다. `Reactive Streams`에서는 `Iteratable-Iterator` 쌍에 대응하는 `Publisher-Subscriber` 쌍이 존재합니다. 그러나 `Subscriber`에게 새로운 값이 발생했을 때 그것이 가용함을 알리는 것은 `Publisher`이며, 이러한 `push` 관점이 `reactive` 하기 위한 열쇠입니다. 또한 푸시 되는 값들에 대해 적용된 동작들이 명령형 프로그래밍에 비해 명시적으로 표현됩니다. 프로그래머는 정확한 제어 흐름을 나타내는 대신 계산 논리를 표현할 수 있습니다. 
+언제 `next()` 아이템에 접근할지를 결정하는 것은 전적으로 개발제의 몫입니다. `Reactive Streams`에서는 `Iteratable-Iterator` 쌍에 대응하는 `Publisher-Subscriber` 쌍이 존재합니다. 그러나 `Subscriber`에게 새로운 값이 발생했을 때 그것이 가용함을 알리는 것은 `Publisher`이며, 이러한 `push` 관점이 `reactive` 하기 위한 열쇠입니다. 또한 푸시 되는 값들에 대해 적용된 동작들이 명령형 프로그래밍에 비해 선언적으로 표현됩니다. 프로그래머는 정확한 제어 흐름을 나타내는 대신 계산 논리를 표현할 수 있습니다.  
+  
+값을 푸시하는 것에 더해, 에러 핸들링과 값의 완료 라는 측면은 잘 정의된 방법으로 처리 됩니다. `Publisher`는 `onNext()`를 호출함으로써 `Subscriber`에게 새로운 값을 push 할 수 있고, 또한 `onError()`를 호출하여 에러 시그널을 보내거나 `onComplete()` 호출을 통해 완료 시그널을 보낼 수 있습니다. 에러와 완료 모두 sequence를 완료 시킵니다. 이것은 아래와 같이 요약할 수 있습니다.
+
+```java
+onNext x 0..N [onErrpr | onComplete]
+```
+
+이러한 접근 방식은 매우 유연합니다. 값이 없거나, 하나만 존재하거나, 혹은 n개의 값이 존재하는 경우(무한한 경우도 포함하여)에 대한 유즈 케이스를 모두 설명할 수 있습니다.  
+  
+그러나 우선 왜 asynchronous reactive 라이브러리가 필요한지 고려해봅시다.
+
 
 
 
