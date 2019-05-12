@@ -405,6 +405,14 @@ Reactive application에서의 데이터 처리를 조립 라인에서의 움직�
 `Rx`와 같은 reactive library에서는 reactive sequence를 크게 두 가지 카테고리로 구분할 수 있습니다: `hot` 그리고 `cold` 입니다. 이러한 구분은 주로 reactive stream이 `Subsriber`에 어떻게 반응해야 하는지에 대한 특징으로 나누게 됩니다.
 - `Cold` sequence는 각각의 `Subscriber`에 대해 시작하며, 이는 데이터의 source를 포함합니다. 예를 들어, 만약 데이터 소스가 HTTP call을 감싸고 있다면 새로운 HTTP request가 각각의 `Subscription`에 대해 생성 됩니다.
 - `Hot` sequence는 반대로 각각의 `Subscriber`에 대해 처음부터 시작하지 않습니다. 대신, 늦은 `Subscriber`는 그들이 구독을 시작한 이후의 signal 부터 수신하게 됩니다. 하지만 몇몇 `Hot reactive stream`들은 발생한 이벤트들의 이력을 일부 혹은 전체를 캐싱할 수도 있음을 주의하세요. 일반적인 관점으로는 `Hot` sequence는 구독 중인 `Subsriber`가 없을 때에도 signal을 발생 시킬 수 있으며, 이는 `구독 하기 전에는 아무 일도 발생하지 않는다` 라는 룰의 예외입니다.  
+  
 `Reactor`에서의 `Hot vs Cold`에 대한 자세한 정보는 [reactor-specific section](https://projectreactor.io/docs/core/release/reference/#reactor.hotCold)에서 확인 할 수 있습니다.
 
+# Reactor Core Features
+`The Reactor Project`의 메인 구성요소는 `reactor-core`로, `Reactive Streams` 스펙에 중점을 두고 `Java 8`을 타겟으로 하는 `reactive library`입니다.  
+`Reactor`는 `Publisher`를 구현하면서도 풍부한 표현력을 가진 `Operator`를 제공하는 조합 가능한 `reactive type`인 `Flux`와 `Mono`를 제안하고 있습니다. `Flux` object는 0..N(0개에서 N개)의 아이템으로 구성되는 `reactive sequence`를 나타내는 반면, `Mono` object의 경우 `singlie-value-or-empty`(0..1) 결과를 나타냅니다.  
+이러한 구분은 타입에 의미적인 정보를 이끌어내며, 비동기 프로세스의 수량을 러프하게 지칭합니다. 예를 들어 HTTP 요청은 오직 하나의 응답을 생성하므로 `count` 연산을 하는 것은 자연스럽지 않습니다. 이러한 HTTP 요청의 결과를 `Mono<HttpResponse>`와 같이 표현할 수 있고 이는 0개 또는 하나의 아이템을 가진다는 맥락에 상응하는 `Operator`만들 제공하므로 `Flux<HttpResponse>` 라는 표현보다 훨씬 매끄럽게 됩니다.  
+처리 과정에서 최대 cardinality를 변경 하는 `Operator`는 관련 타입 또한 전환 시킵니다. 예를 들어 `Flux` 타입에 존재하는 `count` 연산자는 `Mono<Long>`을 반환하게 됩니다.
 
+## *Flux*, an Asynchronous Sequence of 0-N Items
+![](https://raw.githubusercontent.com/reactor/reactor-core/v3.0.7.RELEASE/src/docs/marble/flux.png)
