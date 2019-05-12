@@ -3,7 +3,7 @@ layout: post
 title: "First-class object, anonymous function, clousre, lambda-expression"
 description: "First-class object, 익명 함수, 클로저, lambda-expression에 대한 정리"
 categories: blog
-tags: [first-class object, anonymous function, closure, lambda-expression.]
+tags: [first-class object, anonymous function, closure, lambda-expression, 람다, 익명 함수, 클로저, 일급 객체]
 image:
 feature:
 date: 2019-02-20T21:31:50-04:00
