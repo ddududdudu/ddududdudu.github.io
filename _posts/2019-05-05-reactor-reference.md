@@ -1,9 +1,9 @@
 ---
 layout: post
-title: "[Reactor] Project Reactor Reference Document."
+title: "[Reactor] Reactor 3 Reference Guide"
 description: "Project React 공식 참고 문서 번역."
 categories: blog
-tags: [reactor, reference, document]
+tags: [reactor, reference, document, guide, 리액터]
 image:
 feature:
 date: 2019-05-05T21:31:50-04:00
