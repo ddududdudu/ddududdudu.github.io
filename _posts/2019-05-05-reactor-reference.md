@@ -334,7 +334,7 @@ assertThat(results).contains(
 {9} `allOf()`가 `CompletableFuture<Void>`를 리턴하기 때문에, join()을 통한 결과 수집을 하기 위해 `Future`의 리스트를 다시 반복 해야합니다. `allOf()`가 모든 `Future`가 이루어지는 것을 보장하기 때문에 여기서 블록 되지는 않습니다.  
 {10} 일단 모든 비동기 파이프라인이 트리거 되면, 이것이 처리되는 것을 기다리고 우리가 `assertion`할 수 있도록 결과의 리스트를 리턴합니다.  
 
-`Reactor`가 더 많은 조합 연산자들을 기본적으로 가지고 있기 때문에, 전체적인 과정이 더욱 단순해집니다.
+`Reactor`가 더 많은 조합 연산자들을 기본적으로 가지고 있기 때문에, 전체적인 과정이 더욱 단순해집니다.  
 *Example of Reactor code equivalent to future code*
 ```java
 Flux<String> ids = ifhrIds();                                                                    {1}
@@ -369,4 +369,23 @@ assertThat(results).containsExactly(                                            
 {8} 결과를 확인합니다.  
 
 `Callback`과 `Future`의 비슷한 위험서을 가지며, 이것이 `Reactive Programming`이 `Publisher-Subscriber` 쌍과 함께 해결하고자 하는 부분입니다.
+
+## From Imperative to Reactive Programming
+`Reactor`와 같은 `reactive library`들은 JVM 생태계의 전통적인 비동기적 접근들이 가지는 아래와 같은 단점들을 해결하면서 그와 함께 몇 가지 추가적인 측면에 집중하고 있습니다 :  
+- 조합성과 가독성
+- 풍부한 표현력을 가진 `operator`들로 다루어지는 flow로서의 data
+- 구독(`subscribe`) 전 까지는 아무것도 발생하지 않음
+- 배압(`backpressure) 또는 데이터 생성률이 과도하지 않도록 생산자(`publisher`)에게 소비자(`consumer`)가 신호를 보낼 수 있는 능력
+- 고 수준이지만 너무 추상적이지 않은 동시성
+
+### Composability and Readability
+조합성(compsability)이란 다수의 비동기 작업들을 조율하고, 이전 작업의 결과를 사용하여 후속 작업의 입력으로 사용하거나 `fork-join` 스타일로 일련의 작업을 수행함과 동시에 고수준의 시스템에서 비동기 작업들을 구체적인 구성 요소로서 재사용함을 의미합니다.  
+태스크들을 조율하기 위한 능력은 코드의 가독성과 유지 보수 용이성에 큰 연관이 있습니다. 비동기 프로세스 레이어들이 코드의 양과 복잡성을 증가 시키면서 코드를 조합하고 읽는 것에 대한 어려움은 점점 증가하고 있습니다. 우리가 보았듯이 `callback` 모델은 단순하지만 이 모델의 가장 큰 단점은 복잡한 프로세스들에 대해 하나의 콜백에서 또 다른 콜백을 실행할 필요가 있으므로 콜백과 같은 것들을 중첩 시켜야 한다는 점입니다. 그러한 복잡함은 콜백 지옥(`Callback Hell`)로 알려져 있습니다. 추측 해보거나 혹은 경험적으로 이러한 코드는 가독성이 매우 떨어지게 됩니다.  
+`Reactor`는 풍부한 조합 옵션들을 제공하여 코드가 추상화된 프로세스를 반영하고 모든 것을 일반적으로 동일한 레벨에 유지할 수 있게 해줍니다. (중첩의 최소화)
+
+### The Assembly Line Analogy
+
+
+
+
 
