@@ -391,5 +391,20 @@ Reactive application에서의 데이터 처리를 조립 라인에서의 움직�
 `Reactor`에서 operator들은 우리의 조립라인에서의 작업장에 비유할 수 있습니다. 각각의 operator들은 `Producer`에게 어떠한 행위를 추가하고 이전 단계의 `Producer`를 새로운 인스턴스로 감쌉니다. 이러한 전체 과정은 연결되고, 최초의 `Publisher`로부터 유래한 데이터는 연결 고리를 따라 내려가며 각각의 연결에 의해 변환됩니다. 결국 `Subscriber`가 전체 과정을 완료합니다. 곧 살펴 보겠지만 `Subscriber`가 구독(`Subscribe`) 하지 않는 한 아무 일도 일어나지 않음을 기억하세요.  
 > 각각의 `Operator`가 새로운 instance를 생성한다는 점을 기억하는 것은 당신이 사용한 `Operator`가 당신의 전체 과정에 아무것도 적용하지 않는 다는 매우 흔한 실수를 방지하는 것에 도움을 줄 수 있습니다. FAQ내의 이 [링크](https://projectreactor.io/docs/core/release/reference/#faq.chain)를 확인하세요.
 
+### Nothing Happens Until You *subscribe()*
+`Reactor`에서 `Publisher` operator chain을 구성했을 때, 기본적으로 데이터는 발생을 시작하지 않습니다. 이것은 대신 비동기 프로세스에 대한 추상적인 설명(재사용하고 조합하는 것에 도움이 되는)을 생성했음을 의미합니다.  
+구독(`Subscribing`)을 함으로써 `Publisher`와 `Subscriber`를 서로 묶고 전체 operator chain에서의 데이터 흐름을 시작하게 할 수 있습니다. 이는 내부적으로 `Subscriber`로부터의 한 `request` 신호를 통해 이루어지며 이는 최초의 데이터 source인 `Publisher`에게로 chain을 거슬러 올라가 전달됩니다.
+
+### Backpressure
+상위로 신호를 전달하는 것은 또한 `Backpressure`를 구현하는 것에도 사용됩니다. 이는 조립 라인의 예제에서 작업장이 적체된 작업으로 인해 상위 작업장으로 원자재 흐름에 대한 조정 신호를 보내는 것으로 비유 되었었습니다.  
+`Reactive Streams` 스펙에 의해 정의된 실제 동작 방식은 이 비유와 매우 유사합니다: `Subscriber`는 `unbounded mode`로 동작할 수 있고, 데이터 소스가 모든 데이터를 최대 속도로 `push`하도록 하거나 또는 `request` 동작 방식을 사용해 최대 n개의 요소를 처리할 준비가 되었음을 알릴 수 있습니다.  
+중간 `Operator`들은 중간 처리 과정에서 요청을 바꿀 수도 있습니다. 10개의 batch 작업 요소를 그룹화 하는 `buffer` operator가 있다고 상상해봅시다. `Subscriber`가 하나의 버퍼를 요청하면, 이는 data source가 10개의 요소를 생성하는 것을 받아들일 수 있습니다. 어떤 운영자는 `request(1)`을 매 번 요청 하는 것을 피하는 `prefetching`전략을 구현할 수도 있고, 이는 요청 하기 전에 요소들을 미리 생성하는 비용이 크지 않은 경우 유용할 수 있습니다.  
+이는 `push model`을 `push-pull hybrid`로 변환하며, downstream 그것들이 준비되어 있을 경우 upstream으로부터 n개의 요소를 pull 할 수 있게 됩니다. 그러나 만약 요소들이 준비 되지 않은 상태라면 각각의 요소들이 생성 될 때 마다 upstream에 의해 push 됩니다.
+
+### Hot vs Cold
+`Rx`와 같은 reactive library에서는 reactive sequence를 크게 두 가지 카테고리로 구분할 수 있습니다: `hot` 그리고 `cold` 입니다. 이러한 구분은 주로 reactive stream이 `Subsriber`에 어떻게 반응해야 하는지에 대한 특징으로 나누게 됩니다.
+- `Cold` sequence는 각각의 `Subscriber`에 대해 시작하며, 이는 데이터의 source를 포함합니다. 예를 들어, 만약 데이터 소스가 HTTP call을 감싸고 있다면 새로운 HTTP request가 각각의 `Subscription`에 대해 생성 됩니다.
+- `Hot` sequence는 반대로 각각의 `Subscriber`에 대해 처음부터 시작하지 않습니다. 대신, 늦은 `Subscriber`는 그들이 구독을 시작한 이후의 signal 부터 수신하게 됩니다. 하지만 몇몇 `Hot reactive stream`들은 발생한 이벤트들의 이력을 일부 혹은 전체를 캐싱할 수도 있음을 주의하세요. 일반적인 관점으로는 `Hot` sequence는 구독 중인 `Subsriber`가 없을 때에도 signal을 발생 시킬 수 있으며, 이는 `구독 하기 전에는 아무 일도 발생하지 않는다` 라는 룰의 예외입니다.  
+`Reactor`에서의 `Hot vs Cold`에 대한 자세한 정보는 [reactor-specific section](https://projectreactor.io/docs/core/release/reference/#reactor.hotCold)에서 확인 할 수 있습니다.
 
 
