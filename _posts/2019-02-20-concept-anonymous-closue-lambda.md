@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[conecept] First-class object, anonymous function, clousre, lambda-expression"
+title: "[concept] First-class object, anonymous function, clousre, lambda-expression"
 description: "First-class object, 익명 함수, 클로저, lambda-expression에 대한 정리"
 categories: blog
 tags: [first-class object, anonymous function, closure, lambda-expression, 람다, 익명 함수, 클로저, 일급 객체]
