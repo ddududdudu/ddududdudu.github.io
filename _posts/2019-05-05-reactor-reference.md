@@ -3,7 +3,7 @@ layout: post
 title: "[Reactor] Reactor 3 Reference Guide"
 description: "Project React 공식 참고 문서 번역."
 categories: blog
-tags: [reactor, reference, document, guide, 리액터]
+tags: [reactor, reference, document, guide, 리액터, 레퍼런스]
 image:
 feature:
 date: 2019-05-05T21:31:50-04:00
@@ -416,4 +416,205 @@ Reactive application에서의 데이터 처리를 조립 라인에서의 움직�
 
 ## *Flux*, an Asynchronous Sequence of 0-N Items
 ![](https://raw.githubusercontent.com/reactor/reactor-core/v3.0.7.RELEASE/src/docs/marble/flux.png)
+
+`Flux<T>`는 0개에서 N개의 아이템을 생성하는 비동기 sequence를 나타내는 표준 `Publisher<T>` 이며, 부수적으로 완료(completion) 혹은 에러(error) 시그널로 종료 될 수 있습니다. `Reactive Streams` 스펙에 따라, 이러한 세 가지 형태의 시그널은 `Subscriber`의 `onNext()`, `onComplete()`, `onError()` 메서드에 대한 호출로 변환됩니다.  
+
+이러한 시그널들로 넓은 범위를 커버할 수 있기 때문에 `Flux`는 범용(general-purpose) reactive type입니다. 종료 시그널을 포함하는 모든 이벤트들은 선택 사항이라는 것을 기억하세요: `onNext`이벤트가 없는 `onComplete` 이벤트는 빈(empty) 유한 sequence를 의미하며, 여기서 `onComplete`이벤트를 제거한다면 이것은 무한한(infinitie) empty sequence(취소와 관련된 테스트를 제외하면 별로 유용하진 않지만)를 표현할 수 있습니다. 비슷하게, 무한 sequence들은 비어있을 필요는 없습니다. 예를 들어, `Flux.interval(Duration)`은 clock을 이용해서 일정 tick마다 `Flux<Long>`를 무한히 생성해냅니다.  
+
+## *Mono*, an Asynchronous 0-1 Result
+![](https://raw.githubusercontent.com/reactor/reactor-core/v3.0.7.RELEASE/src/docs/marble/mono.png)
+
+`Mono<T>`는 0개 혹은 최대 한 개의 아이템을 생성하기 위한 특수한 형태의 `Publisher<T>`이며, 선택적으로 `onComplete` 혹은 `onError` 시그널들을 통해 종료됩니다.  
+
+`Mono`에는 `Flux`에 적용 가능한 `Operator`들의 부분 집합만을 제공하며, 몇몇 `Operator`들은(특히 `Mono`와 다른 `Publisher`를 결합하는 것들) `Flux`로 전환시키기도 합니다.  
+얘를 들어, `Mono#concatWith(Publisher)`는 `Flux`를 반환하는 반면, `Mono#then(Mono)`는 또 다른 `Mono`를 반환합니다.  
+
+`Runnable`과 유사하게 `Mono`는 값을 가지지 않고 오직 완료의 개념만을 가지는 비동기 프로세스들을 나타내기 위해 사용할 수 있습니다. 그러한 비어있는 `Mono`를 생성하기 위해 `Mono<Void>`를 사용할 수 있습니다.  
+
+## Simple Ways to Create a Flux or Mono and Subscribe to It
+`Flux`와 `Mono`를 시작하는 가장 쉬운 방법은 그들 각각의 클래스들에 속해있는 수많은 팩토리 메서드들 중 하나를 사용해보는 것입니다.  
+
+예를 들면, `String` sequence를 생성하기 위해서는 아래 예제와 같이 그 요소들을 나열하거나, 혹은 그들을 컬렉션에 넣고 그로부터 `Flux`를 생성할 수 있습니다:
+```java
+Flux<String> seql = Flux.just("foo", "bar", "foobar");
+
+List<String> iterable = Arrays.asList("foo", "bar", "foobar");
+Flux<String> seq2 = Flux.fromIterable(iterable);
+```
+
+팩토리 메서드에 대한 또 다른 예제는 아래와 같습니다:
+```java
+Mono<String> noData = Mono.empty();                         {1}
+
+Mono<String> data = Mono.just("foo");
+
+Fliux<Integer> numbersFromFiveToSeven = Flux.range(5, 3);   {2}
+```
+{1} 팩터리 메서드는 값이 없는 경우에도 제너릭 타입을 사용하고 있음을 유의하세요.  
+{2} 첫 번째 파라미터는 값의 범위에 대한 시작 값을 나타내는는반면, 두 번째 파라미터는 생성할 아이템의 갯수입니다.  
+
+이 sequence가 구독되고 있을 때, `Flux`와 `Mono`는 `Java 8 Lambdas`를 사용하게 됩니다. 아래와 같은 `Subscribe` 메서드의 시그니처에서 볼 수 있듯, 서로 다른 조합의 콜백들을 나타내는 `lambdas`를 가지도록 선택 가능한 다양한 형태의 `.subscribe()`가 있습니다.
+```java
+subscribe();                                                     {1}
+
+subscribe(Consumer<? super T> consumer);                         {2}
+
+subscribe(Consumer<? super T> consumer,
+          Consumer<? super Throwable> errorConsumer);            {3}
+
+subscribe(Consumer<? super T> consumer,
+          Consumer<? super Throwable> errorConsumer
+          Runnalbe completeConsumer);                            {4}
+
+subscribe(Consumer<? super T> consumer,
+          Consumer<? super Throwable> errorConsumer
+          Runnalbe completeConsumer
+          Consumer<? super Subscription> subiscriptionConsumer); {5}
+```
+{1} sequence를 구독하고 트리거합니다.  
+{2} 각각의 생성 된 값에 대해 어떠한 행위를 수행합니다.  
+{3} 생성 된 값을 다루면서도 에러가 발생했을 때 반응합니다.  
+{4} 생성 된 값과 에러를 다루면서 sequence가 성공적으로 완료 되었을 때 특정 코드를 수행합니다.  
+{5} 생성 된 값과 에러, 그리고 성공적인 완료를 다루면서 이 `subscribe` 콜로 생성한 `Subscription`을 이용해 특정 행동을 수행합니다.  
+
+> 이러한 `subscribe`의 여러 변형들은 더 이상 데이터가 필요 없을 경우 구독을 취소하는데 사용할 수 있는 `Subscription`의 레퍼런스를 반환합니다.  
+> 일단 취소하게 되면, 데이터 소스는 값의 생성을 중지해야 하며, 이미 생성된 값에 대해서는 클린업 동작을 수행해야 합니다.  
+> `Reactor`내에서 이러한 취소와 클린업 동작은 범용 목적의 `Disposable` 인터페이스로 표현됩니다.  
+
+### *subscribe* Method Examples
+이 섹션은 `subscribe` 메서드의 다섯 가지 시그니처 각각에 대한 최소한의 예제를 담고 있습니다. 다음의 코드는 아무런 매개 변수가 없는 가장 기본적인 메서드를 보여줍니다.
+```java
+Flux<Integer> ints = Flux.range(1, 3); {1}
+ints.subscribe();                      {2}
+```
+{1} `Subscriber`가 붙었을 때 세 개의 값을 생성하는 `Flux`를 설정합니다.  
+{2} 가장 단순한 방법으로 구독을 시작합니다.  
+
+위 코드는 가시적인 아웃풋을 생성하지 않지만 동작하긴 합니다. `Flux`는 세 개의 값을 생성합니다. 만약 `lambda`를 제공한다면 생성하는 값을 가시적으로 만들 수 있습니다. 아래의 예제는 `subscribe` 메서드가 생성하는 값을 보여주는 방법 중 하나입니다:
+```java
+Flux<Integer> ints = Flux.range(1, 3);        {1}
+ints.subscribe(i -> System.out.[println(i)]); {2}
+```
+{1} `Subscriber`가 붙었을 때 세 개의 값을 생성하는 `Flux`를 설정합니다.  
+{2} 값을 출력하는 `subscriber`를 이용해 구독합니다.
+
+위 코드는 아래와 같은 아웃풋을 생성합니다:
+```
+1
+2
+3
+```
+다음 시그니처에 대한 시연을 위해 아래와 같이 의도적으로 에러를 발생시키도록 해보겠습니다:
+```java
+Flux<Integer> ints = Flux.range(1, 4)                              {1}
+                         .map(i -> {                               {2}
+                           if (i <= 3) return i;                   {3}
+                           throw new RuntimeException("Got to 4"); {4}
+                         });
+ints.subscribe(i -> System.out.println(i),                         {5}
+               error -> System.err.println("Error" + error));
+```
+{1} `Subscriber`가 붙었을 때 세 개의 값을 생성하는 `Flux`를 설정합니다.  
+{2} 각각의 값들을 다른 방식으로 처리하기 위해 `map`이 필요합니다.  
+{3} 대부분의 값은 그 값을 반환하도록 합니다.  
+{4} 특정 값의 경우 강제로 error를 발생 시킵니다.  
+{5} error handler를 포함하는 `Subscrier`를 통해 구독을 시작합니다.  
+
+두 개의 람다 표현식을 가지고(예상하고 있는 컨텐트를 위한 것 하나와, 에러를 위한 것 하나) 아래와 같은 결과를 출력하게 됩니다.
+```
+1
+2
+3
+Error: java.lang.RuntimeException: Got to 4
+```
+다음으로 살펴볼 `subscribe`메서드의 시그니처는 아래 예제와 같이 에러 핸들러와 완료 이벤트 핸들러를 포함하고 있습니다:
+```java
+Flux<Integer> ints = Flux.rage(1, 4);
+ints.subscribe(i -> System.out.println(i),
+               error -> System.err.println("Error " + error),
+               () -> System.out.println("Done"));
+```
+{1} `Subscriber`가 붙었을 때 세 개의 값을 생성하는 `Flux`를 설정합니다.  
+{2} 완료 이벤트 핸들러를 가지는 `Subscriber`를 이용해 구독을 시작합니다.  
+
+에러 시그널과 완료 시그널 모두 종료(terminal) 이벤트이고 두 이벤트 모두 서로에 대해 베타적으로 동작(절대로 두 이벤트 모두를 받을 수 없음)합니다. 완료 이벤트에 대한 `Consumer`를 동작 시키기 위해, 반드시 에러를 트리거 하지 않도록 신경써야 합니다.  
+
+완료 시그널에 대한 콜백은 람다 표현식에서 빈 괄호로 표현 된 것처럼 아무런 입력을 받지 않으며, 이는 `Runnable` interface의 `run`메서드와 일치합니다. 위 코드는 아래와 같은 아웃풋을 생성합니다.
+```
+1
+2
+3
+4
+Done
+```
+마지막으로 살펴 볼 `subscribe` 메서드의 시그니처는 `Consumer<Subscription>`을 포함하고 있습니다. 이 시그니처는 `Subscription`을 이용해 수행할 동작(`request(long)` 혹은 `cancel()`을 실행)을 필요로 하며, 그렇지 않을 경우 `Flux`를 멈추게(hang) 됩니다:
+```java
+Flux<Integer> ints = Flux.range(1, 4);
+ints.subscribe(i -> System.out.println(i),
+               error -> System.err.println("Error " + error),
+               () -> System.out.println("Done"),
+               sub -> sub.request(10));                       {1}
+```
+{1} 구독을 시작하면 `Subscription`을 전달 받습니다. 10개의 요소를 요구하는 시그널을 요청하지만(`request(10)`) 실제 생성 되는 요소는 네 개 이므로 네 개의 요소를 처리하고 완료 됩니다.
+
+### Canceling a *subscribe()* with its *Disposable*
+이러한 람다 기반의 `subscribe()` 변형들은 모두 `Disposable` 반환 타입을 가집니다. 이 경우 `Disposable` 인터페이스는 이 `Subscription`에 대해 `dispose()` 메서드를 호출 함으로써 cancel 가능함을 나타냅니다.  
+
+`Flux`와 `Mono`의 경우, `cancellation`은 데이터 소스에게 요소 생성을 멈추라는 시그널입니다. 하지만 이것이 즉시 수행됨을 보장하지는 못합니다: 몇몇 데이터 소스들은 매우 빠르게 요소들을 생성하여 취소 요청을 수신하기 전에 이미 모든 요소를 생성할 수도 있습니다.  
+
+`Disposable` 클래스에서 제공하는 몇몇 유틸리티 중에서 `Disposable.swap()`은 `Disposable`의 구현체를 원자적으로(atomically) 취소하고 새로운 것으로 대체 시킬 수 있는 wrapper를 생성합니다. 이것은 매우 유용한데, 예를 들어 유저가 버튼을 클릭할 때 마다 현재의 요청을 취소 시키고 새로운 요청으로 대체하는 UI 시나리오가 있습니다. Wrapper 자체를 폐기하는 것은 현재의 구체적인 값과 미래 시점에서 시도 되는 모든 대체 동작들을 닫게 합니다.  
+
+또 하나의 흥미로운 유틸리티로는 `Disposable.composite(...)`가 있습니다. 이 `composite`는 서비스 요청에 관련 있는 다수의 임시 요청과 같은 여러 `Disposable`들을 수집하고 나중 시점에 한 번에 처리할 수 있습니다. 일단 `composite`의 `dispose()`메서드가 호출 되면, 또 다른 `Disposable`을 추가하려는 시도가 즉시 처리됩니다.  
+
+### Alternative to lambdas: BaseSubscriber
+람다들을 조합하는 것 보다 더욱 일반적이고 본격적인 구독자를 가지는 추가적인 `subscribe` 메서드가 존재합니다. `Subscriber`를 작성하는 것을 돕기 위해 `BaseSubscriber`라는 확장 가능한 클래스를 제공합니다.  
+
+이 중 하나를 구현 하고 이를 `SampleSubscriber`라고 부릅시다. 아래 예제는 어떻게 `Flux`와 연동하는지를 보여줍니다:
+```java
+SampleSubscriber<Integer> ss = new SampleSubscriber<Integer>();
+Flux<Integer> ints = Flux.range(1, 4);
+int.subscribe(i -> System.out.println(i),
+              error -> System.err.println("Error: " + error),
+              () -> {System.out.println("Done");},
+              s -> s.request(10));
+ints.subscribe(ss);
+```
+이제 최소한의 `BaseSubscriber` 구현체를 통해 `SampleSubscriber`가 무엇인지 살펴보겠습니다:
+```java
+package io.projectreactor.samples;
+
+import org.projectreactor.Subscription;
+import reqctor.core.publisher.BaseSubscriber;
+
+public class SampleSubscriber<T> extends BaseSubscriber<T> {
+  public void hookOnSubscribe(Subscription subscription) {
+    System.out.println("Subscribed");
+    request(1);
+  }
+
+  public void hookOnNext(T value) {
+    System.out.println(value);
+    request(1);
+  }
+}
+```
+
+`SampleSubscriber` 클래스는 `BaseSubscriber` 클래스를 상속하는데, 이는 `Reactor`에서 user-defined `Subscriber`를 위해 추천하는 추상 클래스입니다. 이 클래스는 `Subscriber`의 행위를 튜닝하기 위해 오버라이딩 될 수 있는 hook들을 제공하고 있습니다. 기본적으로 제한없는 요청을 트리거하고 `subscibe()`와 완전히 동일하게 동작합니다. 하지만 `BaseSubscriber`를 확장하는 것은 요청의 수를 조정하고 싶을 때 더욱 유용합니다.  
+
+요청의 수를 조정하기 위해, 위 코드에 구현했던 것과 같이 `hookOnSubscribe(Subscription subscription)`과 `hookOnNext(T value)`를 구현하기만 하면 됩니다. 위 예제에서는 `hookOnSubscribe` 메서드는 표준 출력으로 문장을 출력하고 첫 번째 요청을 만듭니다. 그리고 나면 `hookOnNext` 메서드가 문장을 출력하고 한 번에 하나씩 추가적인 요청을 생성합니다.  
+
+`SampleSubscriber`클래스의 수행 결과는 아래와 같습니다:
+```
+Subscribed
+1
+2
+3
+4
+```
+
+`BaseSubscriber`는 또한 unbounded mode로 전환할 수 있게 `requestUnbounded()` 메서드(`request(Long.MAX_VALUE)`와 동일한 의미)를 제공하며 또한 `cancel()` 메서드도 제공합니다.  
+
+추가적인 hook으로 `hookOnComplete`, `hookOnError`, `hookOnCancel` 그리고 `hookOnFainally`(sequence가 종료될 때 `SignalType` 파라미터로 타입을 전달하며 항상 호출되는)가 있습니다.
+
+> `hookOnError`, `hookOnCancel` 및 `hookOnComplete` 메서드를 구현하기 원할 것입니다. 그리고 `hookFinally`를 구현하기를 원할지도 모릅니다. `SampleSubscribe`는 제한된 요청을 수행하기 위한 `Subscriber`의 최소한의 구현입니다.
 
