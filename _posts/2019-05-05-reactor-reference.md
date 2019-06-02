@@ -620,4 +620,53 @@ Subscribed
 
 ### On Backpressure, and ways to reshape requests
 
-`Reactor`에서 `backpressure`를 구현할 때, `Consumer` pressure는 업스트림 operator에게 `request`를 전송함으로써 데이터 소스까지 거꾸로 전달해 나가는 것이다. 
+`Reactor`에서 `backpressure`를 구현할 때, `Consumer` pressure는 업스트림 operator에게 `request`를 전송함으로써 데이터 소스까지 거꾸로 전달해 나가는 것입니다. 현재 요청의 합계는 종종 지금의 "요구" 혹은 "지연된 요청"으로 참조됩니다. 요구는 제한 없는 요청("가능한 빠르게 생상하라"와 같이 기본적으로 backpresuure를 비활성화 시키는)인 `Long.MAX_VALUE`로 나타납니다.  
+
+최초의 요청은 최종 구독자의 구독 시점에서 발생하지만, 모든 것을 즉시 구독하는 가장 직접적인 방법은 `Long.MAX_VALUE`의 무제한 요청을 트리거 하는 것입니다:  
+- `subscribe()`와 람다 기반의 변형들 중 대부분(`Consuner<Subscription>`을 가지는 예외를 제외한)
+- `block()`, `blockFirst()` 그리고 `blockLast()`
+- `toIteraable()` / `toStream()`을 순회 하는 것
+
+기존 요청을 커스터마이징 하는 가장 단순한 방법은 `hookOnSubscribe` 메서드를 오버라이드한 `BaseSubscriber`와 함께 `subscribe`하는 것입니다: 
+```java
+Flux.range(1, 10)
+  .doOnRequest(r -> System.out.println("request of " r))
+  .subscribe(new BaseSubscriber<Integer>() {
+      @Override
+      public void hoolOnSubscribe(Subscription subscription) {
+        request(1);
+      }
+
+      @Override
+      public void hookOnNext(Integer integer) {
+        System.out.println("Cancelling after having received " + integer);
+        cancel();
+      }
+  });
+```
+
+위 코드 조각은 아래와 같은 결과를 출력 합니다: 
+```
+request of 1
+Cancelling after having received 1
+```
+> 요청을 다룰 때, 시퀀스를 진행 시킬 수 있을 정도로 충분히 요청 하도록 주의해야 합니다. 그렇지 않을 경우 `Flux`는 곧 `막히게(stuck)`됩니다. 이것이 `BaseSubscriber`가 기본적으로 무제한의 요청을 하는 이유입니다. 이 hook을 오버라이드 할 때, 최소한 한 번은 요청을 호출 해야합니다.
+
+#### Operators changing the demand from downstream
+한 가지 명심해야 할 것은 구독 수준에서의 요구(demand)는 업스트림 체인의 각 오퍼레이터들에 의해 재구성(reshaped)될 수 있음을 표현한다는 것입니다. `buffer(N)` 오퍼레이터인 textbook의 경우: 만약 `request(2)`를 요청 받았을 경우 `두 개의 full buffer`에 대한 요구로 해석합니다. 그 결과, buffer는 full 상태를 구성하기 위해 N개의 요소를 필요로 하므로, `buffer` 오퍼레이터는 `2 x N`에 대한 요청으로 재구성됩니다.  
+
+아마 몇몇 오퍼레이터들은 `prefetch`라고 불리는 `int` 타입의 입력 파라미터를 가지는 변형이 있음을 알아 차렸을 수 있습니다. 이것은 오퍼레이터에 대한 또 다른 범주로 다운스트림 요청을 변형하는 것입니다. 이 오퍼레이터들은 내부 시퀀스를 다루며, 도달하는 각 요소(`flatMap`과 같이)에서 `Publisher`를 파생합니다.  
+
+`Prefetch`는 이러한 내부 시퀀스에서 생성 된 최초의 요청을 튜닝하는 방법입니다. 만약 명시 되지 않은 경우 대부분의 이러한 오퍼레이터들은 32의 요청을 기본으로 시작합니다.  
+
+이러한 오퍼레이터들은 보통 `replenishing optimization`(보충 최적화)를 구현합니다: 일단 오퍼레이터가 25%의 prefetch 요청을 만족하면, 업스트림으로부터 다시 나머지 25%를 재요청합니다. 이는 직관적인(heuristic) 최적화로 이러한 오퍼레이터들이 앞으로의 요청을 사전에 예측할 수 있도록 합니다. 
+
+최종적으로, 이 두 오퍼레이터들은 요청을 직접적으로 튜닝할 수 있도록 하기 위해 만들어졌습니다: `limitRate`와 `limitRequest`입니다.  
+
+`limitRate(N)`은 다운스트림 요청을 분할하여 더 작은 배치(batch)들로 업스트림림에 전파 되도록 합니다. 예를 들어, 100개의 요청에 대해 `limitRate(10)`을 하는 것은 10개에 대해 최대 10번의 요청을 하도록 업스트림에 전파하게 됩니다. 이러한 형태에서 `limitRate`는 보충 최적화를 실제로 구현하고 있음을 유념하시기 바랍니다.  
+
+오퍼레이터들은 또한 보충하는 양을 튜닝할 수 있게 하는 변형들을 가지고 있으며, 그러한 변형들에서 `lowTide`로 언급 됩니다: `limitRate(highTide, lowTide)`. `lowTide`의 값을 0으로 선택하는 것은 보충 전략에 의해 추가로 재형성 된 배치(batch)들 대신 `highTide` 요청의 엄격한 배치를 발생하게 합니다.  
+
+반면에 `limitRequest(N)`는 다운스트림 요청을 최대한의 최종 요청으로 `감싸(caps)`게 됩니다. 요청들을 N개 까지 합칩니다. 만약 하나의 요청이 N개를 초과하는 최종 요청을 만들지 않는 경우 해당 요청은 전체적으로 업스트림에 전파됩니다. 소스에 의해 해당 수량이 방출 된 후 `limitRequest`는 시퀀스 완료를 고려하고 `onComplete` 시그널을 다운스트림으로 보내고 소스를 취소합니다.  
+
+## Programmatically creating a sequence
