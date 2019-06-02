@@ -670,3 +670,79 @@ Cancelling after having received 1
 반면에 `limitRequest(N)`는 다운스트림 요청을 최대한의 최종 요청으로 `감싸(caps)`게 됩니다. 요청들을 N개 까지 합칩니다. 만약 하나의 요청이 N개를 초과하는 최종 요청을 만들지 않는 경우 해당 요청은 전체적으로 업스트림에 전파됩니다. 소스에 의해 해당 수량이 방출 된 후 `limitRequest`는 시퀀스 완료를 고려하고 `onComplete` 시그널을 다운스트림으로 보내고 소스를 취소합니다.  
 
 ## Programmatically creating a sequence
+이번 섹션에서는 관련 있는 이벤트들(`onNext`, `onError` 그리고 `onComplete`)들을 프로그래밍적으로 정의 함으로써 `Flux`와 `Mono`를 생성하는 방법을 설명하겠습니다. 이러한 모든 메서드는 그들이 우리가 `sink`라고 부르는 이벤트를 트리거 하게 하도록 하는 API를 공개한다는 점을 공유하고 있습니다. 곧 살펴보겠지만, 사실 몇 가지 `sink`의 변형들이 존재합니다.  
+
+### Synchronous *generate*
+`Flux`를 프로그래밍적으로 생성하는 가장 단순한 방법은 generator function을 가지는 `generate` 메서드를 통하는 것입니다.  
+
+이것은 `동기적`이고(synchronous) `순차적인`(one-by-one) 생성으로, `sink`는 `SynchronousSink`이고 이것의 `next()` 메서드는 콜백 요청 당 최대 한 번만 호출 가능함을 의미합니다. `error(throwable)` 또는 `complete()`를 호출할 수 있지만, 선택적인 부분입니다.  
+
+가장 유용한 변형은 아마도 `sink`를 사용할 때 다음으로 생성할 것을 결정할 수 있도록 상태를 저장하고 참조할 수 있게 해주는 것일 겁니다. 오브젝트 상태의 타입을 나타내는 `<S>`와 함께 `BiFunction<S, SynchronousSink<T>. S>`의 시그니처를 가지는 generator function을 확인할 수 있습니다. 최초의 상태로서 `Supplier<S>`를 제공하면, generator function이 각각의 단계에서 새로운 상태를 반환합니다.  
+
+예를 들어, `int`를 상태로서 사용할 수 있습니다:  
+
+*Example of state-based `generate`*  
+```java
+Flux<String> flux = Flux.generate(
+  () -> 0,                                       {1}
+  (state, sink) -> {
+    sink.next("3 x " + state + " = " + 3*state); {2}
+    if (state == 10) sink.complete();            {3}
+    return state + 1;                            {4}
+  });
+```
+{1} 최초 상태 값으로 0을 제공합니다.  
+{2} 무엇을 생성할지(3에 대한 곱셈)에 대해 선택하기 위해 상태를 사용합니다.  
+{3} 언제 멈출지를 선택하기 위해서도 상태를 사용합니다.  
+{4} 다음 호출(이번 단계에서 시퀀스가 멈추지 않는다면)에서 사용하기 위한 새로운 상태를 리턴합니다.  
+
+위 코드는 3에 대한 곱셈을 생성하며, 아래 시퀀스와 같습니다.  
+```
+3 x 0 = 0
+3 x 1 = 3
+3 x 2 = 6
+3 x 3 = 9
+3 x 4 = 12
+3 x 5 = 15
+3 x 6 = 18
+3 x 7 = 21
+3 x 8 = 24
+3 x 9 = 27
+3 x 10 = 30
+```
+또한 변형 가능한(mutable) `<S>`를 사용할 수 있습니다. 위 예제는 각 단계마다 변형시키는 단일 `AtomicLong`을 상태로서 사용하여 재 작성 가능합니다:   
+
+*Mutable state variant*
+```java
+Flux<String> flux = Flux.generate(
+  AtomicLong::New,                       {1}
+  (state, sink) -> {
+    long i = state.getAndIncrement();    {2}
+    sink.next("3 x " + i + " = " + 3*i);
+    if (i == 10) sink.complete();
+    return state;                        {3}
+  });
+```
+{1} 이번에는 상태로서 변형 가능한 오브젝트를 생성합니다.  
+{2} 이 부분에서 상태를 변형합니다.  
+{3} 새로운 상태로서 동일한 인스턴스를 반환합니다.  
+> 만약 당신의 상태 오브젝트가 몇몇 리소스를 초기화하기 원한다면, `generate(Supplier<S>, BiFunction, Consumer<S>)` 변형을 사용하여 마지막 상태 인스턴스를 초기화 하세요.
+
+`Consumer`를 포함하는 generate method를 사용하는 예제는 아래와 같습니다:
+```java
+Flux<String> flux = Flux.generate(
+  AtomicLong::new,
+  (state, sink) -> {                                 {1}
+    long i = state.getAndIncrement();                {2}
+    sink.next("3 x " + i + " = " + 3*i);
+    if (i == 10) sink.complete();
+    return state;                                    {3}
+  }, 
+  (state) -> System.out.println("state: " + state)); {4}
+```
+{1} 다시 한 번, 상태로서 다수의 오브젝트르 생성합니다.  
+{2} 여기서 상태를 변형 시킵니다.  
+{3} 새로운 상태로서 동일한 인스턴스를 반환합니다.  
+{4} 이 `Consumer` 람다의 아웃풋으로 마지막 상태 값(11)을 확인할 수 있습니다.  
+
+상태가 데이터 베이스 커넥션을 포함하거나 프로세스의 마지막 과정에서 처리가 필요한 다른 리소스들이 있는 경우, `Consumer` 람다가 커넥션을 종료 시키거나 마지막에 처리 해줘야 하는 동작들을 다룰 수 있습니다.
