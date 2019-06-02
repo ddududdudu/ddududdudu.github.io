@@ -618,3 +618,6 @@ Subscribed
 
 > `hookOnError`, `hookOnCancel` 및 `hookOnComplete` 메서드를 구현하기 원할 것입니다. 그리고 `hookFinally`를 구현하기를 원할지도 모릅니다. `SampleSubscribe`는 제한된 요청을 수행하기 위한 `Subscriber`의 최소한의 구현입니다.
 
+### On Backpressure, and ways to reshape requests
+
+`Reactor`에서 `backpressure`를 구현할 때, `Consumer` pressure는 업스트림 operator에게 `request`를 전송함으로써 데이터 소스까지 거꾸로 전달해 나가는 것이다. 
