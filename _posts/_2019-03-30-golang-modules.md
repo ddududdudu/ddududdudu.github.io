@@ -28,16 +28,20 @@ date: 2019-03-30T21:31:50-04:00
 ### Nutshell
 - 초기화 : `go mod init {package.name}`
 - 의존성 추가
-  - `go build` or `go test` 등 패키지 빌드성 커맨드 : 현재 코드를 기준으로 의존성을 체크하고 추가가 필요한 패키지가 발견 되는 경우 해당 패키지의 `latest` 버전을 추가
+  - `go build ./...` or `go test ./...` 등 패키지 빌드성 커맨드 : 현재 코드를 기준으로 의존성을 체크하고 추가가 필요한 패키지가 발견 되는 경우 해당 패키지의 `latest` 버전을 추가
   - `go get {packange}.{version}` : 이미 존재하는 패키지의 경우 지정한 버전으로 갱신, 없을 경우 신규 추가
+  - `go get -u` : 현재 프로젝트에서 사용 중인 모듈들에 대해 업데이트(minor or patch)가 존재하는 경우 업데이트 수행
 - 의존 패키지 다운로드 : `go mod download`
 - 정리 : `go mod tidy`
-- 조회 : `go list -m`
+- 조회
+  - `go list -m all` : 현재 프로젝트에서 사용 중인 모듈들에 대한 정보(패키지 명, 버전 등)를 확인
+  - `go list -u -m all` : 현재 프로젝트에서 사용 중인 모듈들의 업데이트 가능한 버전에 대한 정보를 확인
+
 
 ### 초기화
 `go mod init {package_name}` 커맨드를 이용하여 현재 경로에서 `package_name`을 root로 가지는 `module`을 초기화 한다. 즉 내부 패키지에 접근하는 경우 `import {package_name}/...`으로 할 수 있다. 실행 결과로 해당 경로에 `modules` 프로젝트임을 나타내는 `go.mod`와 `go.sum`이 생성 된다.  
 
-#### go.mod
+### go.mod
 ```go
 module com.study.go/modules
 
@@ -56,7 +60,14 @@ require (
 `github.com/go-sql-driver/mysql` 패키지의 경우 버전이 `v1.4.1`로 깔끔하게 표기 되어 있는 반면, `github.com/denisenkom/go-mssqldb` 패키지의 경우 `v0.0.0-20181014144952-4e0d7dc8888f`로 표기 된 것을 볼 수 있는데, 이는 tagging 되지 않은 버전을 참조하기 위해 임의로 생성한 `pseudo version`이기 때문이다.  
 `modules`에 의해 관리되는 패키지의 정보를 확인하고 싶을 경우 `go list -m` 커맨드를 이용할 수 있다.  
 
-#### go.sum
+#### Diriectives
+- module : 현재 `go.mod`에서 관리하는 모듈의 모듈명(패키지 패스)
+- require
+- replace : 실제 해당 모듈이 존재하는 import path를 지정한 path로 사용하게 함
+  - local에 존재하는 패키지를 사용하고 싶거나 하는 경우에 사용할 수 있음
+- exclude
+
+### go.sum
 현재 프로젝트에서 의존성을 가지는 패키지들(`go.mod`에서 관리되는)의 특정 버전에 대한 hash 값을 관리하는 파일이다. 악의적이거나 의도치 않은 변경 등에 대비하고, 처음 다운로드한 패키지와 bit level로 동일함을 보장하기 위해 사용한다. `go.mod`와 함께 pair로 VCS에 관리 되어야 한다.
 
 ### 의존성 추가와 업데이트
@@ -64,8 +75,10 @@ require (
 > 여기서 `최신(Latest)`의 의미는 아래 우선 순위로 결정 된다.
 > 1. `non-prerelease`인 stable tag
 > 2. `prerelease` stable tag
-> 3. `untagged` 버전 중 가장 최신
+> 3. `untagged` 버전 중 가장 최신  
 
-### Major 버전 업데이트
+물론 `go.mod`를 직접 수정해도 된다.
 
+### 의존 패키지 다운로드
+`go build`나 `go test`와 같이 패키지를 빌드하는 커맨드를 실행하면 소스 코드를 검사하여 패키지에 대한 의존성을 추가하고 다운로드 까지 진행하게 된다. 하지만 이미 생성된 `go.mod`와 `go.sum`을 이용해 다운로드만 진행하고 싶은 경우 `go mod download`를 사용할 수 있다.
 
