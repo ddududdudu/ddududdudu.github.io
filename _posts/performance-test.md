@@ -1,0 +1,1 @@
+> 개발한 서버를 상용 환경에서 서비스 하기 전, 실제로 처리 가능한 수준을 파악하고 적정 수준의 장비를 할당하기 위해 성능을 측정하게 된다. 보통 stress test 도구를 이용해 예상 목표 요청량에 대한 `CPU usage`와 `Momory usage`를 기준으로 `TPS(Trasaction Per Second)`를 파악하는 순이다. 
