@@ -1,5 +1,16 @@
+---
+layout: post
+title: "[kotlin] 첫 인상"
+description: ""
+categories: blog
+tags: [kotlin]
+image:
+feature:
+date: 2021-02-14T21:31:50-04:00
+---
+
 Kotlin을 main 개발 언어로 사용 중인 다른 팀의 다른 프로젝트의 코드를 직접 수정 해야 할 경우가 생겼다. 
-짧은 코드지만 처음으로 Kotlin으로 코드를 작성 해보고, 리뷰를 받아 고쳐 나가본 과정을 기록 해본다.
+짧은 코드지만 처음으로 Kotlin으로 코드를 작성 해보고, 리뷰를 받아 고쳐 나간 과정을 기록 해본다.
 
 ### 첫 코드
 해야 할 일은 아래와 같았다.
